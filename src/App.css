@@ -38,7 +38,15 @@ body {
   cursor: pointer;
   text-align: left;
 }
-
+.sidebar-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
 .sidebar-btn:hover {
   background: #334155;
 }
@@ -103,3 +111,4 @@ body {
 .chat-input button:hover {
   background: #1d4ed8;
 }
+
