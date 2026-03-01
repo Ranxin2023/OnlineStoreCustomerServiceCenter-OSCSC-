@@ -147,7 +147,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5000/api/web-scrapy/scrape", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: scrapeUrl }),
@@ -180,7 +180,7 @@ function App() {
     setDetailError(null);
     setDetailResult(null);
     try {
-      const response = await fetch("http://localhost:5000/api/web-scrapy/scrape-detail", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape-detail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: detailUrl }),

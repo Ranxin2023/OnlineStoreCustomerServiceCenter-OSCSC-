@@ -27,3 +27,4 @@ __pycache__
 debug*
 websites/
 downloads/
+.env

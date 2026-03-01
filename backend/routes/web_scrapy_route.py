@@ -249,7 +249,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-
+from dotenv import load_dotenv
+load_dotenv()
 
 web_scrapy_bp = Blueprint("web_scrapy", __name__)
 
