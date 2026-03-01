@@ -128,7 +128,7 @@ interface DetailResult {
 
 function App() {
   // ── 订单列表爬取 ──────────────────────────────────
-  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
