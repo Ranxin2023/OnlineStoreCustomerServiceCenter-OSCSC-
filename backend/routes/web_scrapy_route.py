@@ -258,8 +258,8 @@ web_scrapy_bp = Blueprint("web_scrapy", __name__)
 CHANNEL_ID       = "1579196"
 BASE_URL         = "https://csp.aliexpress.com"
 PAGE_DELAY       = 3    # 翻页等待秒数
-CHROME_PATH      = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-CHROME_USER_DATA = r"C:\Users\ranxi\chrome-selenium"
+CHROME_PATH      = os.getenv("CHROME_PATH", r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+CHROME_USER_DATA = os.getenv("CHROME_USER_DATA", r"C:\Users\ranxi\chrome-selenium")
 DEBUG_PORT       = 9222
 
 
