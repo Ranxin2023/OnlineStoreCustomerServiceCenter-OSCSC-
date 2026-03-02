@@ -1,4 +1,3 @@
-
 """
 web_scrapy_route.py
 Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py）
@@ -94,9 +93,7 @@ def setup_driver():
 
 def parse_orders_from_page(driver):
     """
-    从当前页面解析所有订单：
-      第一阶段 — 解析列表数据
-      第二阶段 — 逐条进详情页抓地址
+    第一阶段 — 只解析列表数据，不进详情页
     """
     all_orders = []
 
@@ -112,7 +109,6 @@ def parse_orders_from_page(driver):
     tables = driver.find_elements(By.CSS_SELECTOR, "table.next-table-row")
     print(f"  找到 {len(tables)} 个订单")
 
-    # ── 第一阶段：列表数据 ─────────────────────────────
     for table in tables:
         order = {}
         try:
@@ -224,6 +220,7 @@ def parse_orders_from_page(driver):
                 order['semi_managed'] = "yes" if any("半托管" in t for t in tag_texts) else "no"
             except Exception:
                 order['semi_managed'] = "no"
+
             # 操作按钮
             try:
                 btns = table.find_elements(
@@ -248,14 +245,6 @@ def parse_orders_from_page(driver):
             print(f"  [跳过] 解析订单出错: {e}")
             continue
 
-    # ── 第二阶段：逐条抓详情页 ────────────────────────
-    print("  开始抓详情页...")
-    for order in all_orders:
-        if order.get("order_link"):
-            print(f"    -> 抓详情 {order['order_id']}")
-            detail_data = extract_order_detail(driver, order["order_link"])
-            order.update(detail_data)
-
     return all_orders
 
 
@@ -276,7 +265,7 @@ def extract_order_detail(driver, order_link):
 
         # 等待地址区域加载
         try:
-            WebDriverWait(driver, 15).until(
+            WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "div[class*='orderInfo--addressItem']")
                 )
@@ -344,12 +333,12 @@ def extract_order_detail(driver, order_link):
             return False
 
         try:
-            WebDriverWait(driver, 30).until(recipient_unmasked)
+            WebDriverWait(driver, 5).until(recipient_unmasked)
             print("    OK 收件人已脱敏")
         except Exception:
             # 等待超时就兜底等 2 秒再读，避免空结果
             print("    WARN 等待收件人脱敏超时，延迟2秒后继续")
-            time.sleep(3)
+            time.sleep(2)
 
 
         # ── 读取地址字段 ──
@@ -392,24 +381,43 @@ def extract_order_detail(driver, order_link):
 # 翻页
 # ─────────────────────────────────────────────────────
 
-def go_next_page(driver):
+
+def get_total_pages(driver):
+    """从分页显示元素读取总页数，例如 '1/30' 返回 30"""
+    try:
+        display = driver.find_element(By.CSS_SELECTOR, "span.next-pagination-display")
+        text = display.text.strip()  # 例如 "1/30"
+        total = int(text.split("/")[-1])
+        print(f"  [分页] 当前: {text}，共 {total} 页")
+        return total
+    except Exception as e:
+        print(f"  [分页] 读取总页数失败: {e}")
+        return None
+
+
+def go_next_page(driver, current_page):
     """点击下一页，返回 True 表示成功翻页，False 表示已是最后一页"""
     try:
-        driver.find_element(
-            By.CSS_SELECTOR, "button.next-pagination-item.next[disabled]"
-        )
-        return False
-    except Exception:
-        pass
+        total = get_total_pages(driver)
+        if total is not None and current_page >= total:
+            print(f"  [翻页] 已是最后一页 ({current_page}/{total})")
+            return False
 
-    try:
         next_btn = driver.find_element(
-            By.CSS_SELECTOR, "button.next-pagination-item.next:not([disabled])"
+            By.CSS_SELECTOR, "button.next-pagination-item.next-next"
         )
+        disabled = next_btn.get_attribute("disabled")
+        aria_label = next_btn.get_attribute("aria-label") or ""
+        print(f"  [翻页] 找到下一页按钮: aria-label='{aria_label}', disabled='{disabled}'")
+        if disabled is not None:
+            print("  [翻页] 按钮已禁用，已是最后一页")
+            return False
         driver.execute_script("arguments[0].click();", next_btn)
+        print("  [翻页] 点击下一页成功")
         time.sleep(PAGE_DELAY)
         return True
-    except Exception:
+    except Exception as e:
+        print(f"  [翻页] 未找到下一页按钮，停止: {e}")
         return False
 
 
@@ -525,38 +533,52 @@ def crawl_orders(order_list_url, max_pages=None):
     except Exception:
         print("WARN 等待订单列表超时，尝试继续...")
 
-    # 点击"今日新订单"按钮，筛选当日订单
+    # 等待用户在浏览器里点击查询按钮
+    print("⏳ 请在浏览器里点击【查询】按钮，程序将自动继续...")
     try:
-        today_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "div[class*='board--boardItemTitle']")
+        # 找到查询按钮，注入 JS 监听点击事件，点击后设置一个标记
+        query_btn = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[.//span[text()='查询']]")
             )
         )
-        driver.execute_script("arguments[0].click();", today_btn)
-        print("OK 点击了今日新订单")
+        driver.execute_script("""
+            arguments[0].addEventListener('click', function() {
+                window.__query_clicked = true;
+            });
+        """, query_btn)
+        print("  监听查询按钮中，等待用户点击...")
 
-        # 等待列表刷新（旧表格消失再等新表格出现）
+        # 等用户点击（最多 5 分钟）
+        WebDriverWait(driver, 300).until(
+            lambda d: d.execute_script("return window.__query_clicked === true;")
+        )
+        print("OK 检测到用户点击查询，等待列表刷新...")
+        time.sleep(2)
+
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
         )
-        print("OK 今日订单列表已加载")
+        print("OK 订单列表已加载，开始抓取...")
         time.sleep(1)
     except Exception as e:
-        print(f"WARN 点击今日新订单失败，抓取全部订单: {e}")
+        print(f"WARN 等待查询超时，尝试继续: {e}")
 
     all_orders = []
     page = 1
+
+    # ── 第一阶段：翻完所有页，只收集列表数据 ──────────────
     while True:
-        print(f"\n第 {page} 页...")
+        print(f"\n第 {page} 页（收集列表）...")
         orders = parse_orders_from_page(driver)
         all_orders.extend(orders)
         print(f"  累计 {len(all_orders)} 条")
 
         if max_pages and page >= max_pages:
-            print(f"  已达设定最大页数 {max_pages}，停止")
+            print(f"  已达设定最大页数 {max_pages}，停止翻页")
             break
 
-        if not go_next_page(driver):
+        if not go_next_page(driver, page):
             print("  已到最后一页")
             break
 
@@ -567,9 +589,16 @@ def crawl_orders(order_list_url, max_pages=None):
             print("  冷却 10 秒...")
             time.sleep(10)
 
+    # ── 第二阶段：统一抓所有详情页（不再需要回列表页）──────
+    print(f"\n开始抓取 {len(all_orders)} 条订单的详情页...")
+    for order in all_orders:
+        if order.get("order_link"):
+            print(f"  -> 抓详情 {order['order_id']}")
+            detail_data = extract_order_detail(driver, order["order_link"])
+            order.update(detail_data)
+
     # 不调用 driver.quit()，Chrome 是用户自己的，不能关
     return all_orders
-
 
 # ─────────────────────────────────────────────────────
 # Flask 路由
