@@ -16,7 +16,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 260px;
+  width: 520px;
   background: #0f172a; /* dark blue */
   color: white;
   padding: 20px;
@@ -30,6 +30,7 @@ body {
 }
 
 .sidebar-btn {
+  width: 250px;
   background: #1e293b;
   border: none;
   color: white;
@@ -39,6 +40,7 @@ body {
   text-align: left;
 }
 .sidebar-input {
+  width: 250px;
   padding: 10px;
   border-radius: 6px;
   border: none;
