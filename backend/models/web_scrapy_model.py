@@ -26,8 +26,8 @@ tag_list = [
     ("btns","button.next-btn span.next-btn-helper", True)
 ]
 class WebScrapyModel:
-    def __init__(self, driver):
-        self.driver=driver
+    def __init__(self):
+        pass
     
     # ─────────────────────────────────────────────────────
     # 翻页
@@ -243,12 +243,7 @@ class WebScrapyModel:
         self.driver.get(order_list_url)
         time.sleep(2)
 
-        self.driver.execute_script("""
-        localStorage.clear();
-        sessionStorage.clear();
-        """)
-
-        self.driver.refresh()
+        
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
             WebDriverWait(self.driver, 30).until(

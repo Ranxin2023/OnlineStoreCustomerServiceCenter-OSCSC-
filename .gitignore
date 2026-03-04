@@ -28,3 +28,5 @@ debug*
 websites/
 downloads/
 .env
+
+chrome_profiles/
