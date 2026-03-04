@@ -114,3 +114,44 @@ body {
   background: #1d4ed8;
 }
 
+/* Divider */
+.sidebar-divider {
+  width: 100%;
+  border-color: #444;
+  margin: 12px 0;
+}
+
+/* Detail result container */
+.detail-result-box {
+  margin-top: 10px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  color: #eee;
+  word-break: break-all;
+}
+
+/* Detail result row */
+.detail-row {
+  margin-bottom: 4px;
+}
+
+/* Detail label */
+.detail-label {
+  color: #aaa;
+}
+
+/* Click source text */
+.detail-clicked-by {
+  margin-top: 8px;
+  color: #888;
+  font-size: 11px;
+}
+
+.error-text {
+  color: salmon;
+  font-size: 12px;
+  margin-top: 4px;
+}

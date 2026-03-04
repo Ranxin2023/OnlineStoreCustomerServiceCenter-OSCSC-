@@ -126,11 +126,22 @@ interface DetailResult {
   debug_elements: any[];
 }
 
+const STORE_URLS = {
+  store1: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=98158",
+  store2: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1471480",
+  store3: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196",
+  
+};
+
 function App() {
   // ── 订单列表爬取 ──────────────────────────────────
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+  const [loading3, setLoading3] = useState(false);
+  const [error1, setError1] = useState<string | null>(null);
+  const [error2, setError2] = useState<string | null>(null);
+  const [error3, setError3] = useState<string | null>(null);
 
   // ── 订单详情爬取 ──────────────────────────────────
   const [detailUrl, setDetailUrl] = useState("");
@@ -139,18 +150,20 @@ function App() {
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
 
   // ── 处理订单列表爬取 ──────────────────────────────
-  const handleScrapeWebsite = async () => {
-    if (!scrapeUrl.startsWith("http")) {
-      setError("Please enter a valid URL");
+  const handleScrapeStore1 = async () => {
+    const url=STORE_URLS.store1
+    if (!url.startsWith("http")) {
+      setError1("Please enter a valid URL");
       return;
     }
-    setLoading(true);
-    setError(null);
+    
+    setLoading1(true);
+    setError1(null);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: scrapeUrl }),
+        body: JSON.stringify({ url: url }),
       });
       if (!response.ok) throw new Error("Failed to scrape website");
 
@@ -164,9 +177,71 @@ function App() {
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError1(err.message || "Something went wrong");
     } finally {
-      setLoading(false);
+      setLoading1(false);
+    }
+  };
+  const handleScrapeStore2 = async () => {
+    const url=STORE_URLS.store2
+    if (!url.startsWith("http")) {
+      setError2("Please enter a valid URL");
+      return;
+    }
+    setLoading2(true);
+    setError2(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url }),
+      });
+      if (!response.ok) throw new Error("Failed to scrape website");
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = "orders.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      setError2(err.message || "Something went wrong");
+    } finally {
+      setLoading2(false);
+    }
+  };
+  const handleScrapeStore3 = async () => {
+    const url=STORE_URLS.store2
+    if (!url.startsWith("http")) {
+      setError3("Please enter a valid URL");
+      return;
+    }
+    setLoading3(true);
+    setError3(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url }),
+      });
+      if (!response.ok) throw new Error("Failed to scrape website");
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = "orders.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      setError3(err.message || "Something went wrong");
+    } finally {
+      setLoading3(false);
     }
   };
 
@@ -216,12 +291,28 @@ function App() {
         />
         <button
           className="sidebar-btn"
-          onClick={handleScrapeWebsite}
-          disabled={loading}
+          onClick={handleScrapeStore1}
+          disabled={loading1}
         >
-          {loading ? "Scraping..." : "🔍 Scrape Orders"}
+          {loading1 ? "Scraping..." : "🔍 Scrape Store1"}
         </button>
-        {error && <p style={{ color: "salmon", fontSize: "12px" }}>{error}</p>}
+        {error1 && <p className="error-text">{error1}</p>}
+        <button
+          className="sidebar-btn"
+          onClick={handleScrapeStore2}
+          disabled={loading2}
+        >
+          {loading2 ? "Scraping..." : "🔍 Scrape Store2"}
+        </button>
+        {error2 && <p className="error-text">{error2}</p>}
+        <button
+          className="sidebar-btn"
+          onClick={handleScrapeStore3}
+          disabled={loading3}
+        >
+          {loading3 ? "Scraping..." : "🔍 Scrape Store3"}
+        </button>
+        {error3 && <p className="error-text">{error3}</p>}
 
         {/* ── 订单详情爬取 ── */}
         <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
@@ -245,16 +336,7 @@ function App() {
 
         {/* 详情结果展示 */}
         {detailResult && (
-          <div style={{
-            marginTop: "10px",
-            background: "#1e1e1e",
-            border: "1px solid #444",
-            borderRadius: "8px",
-            padding: "10px",
-            fontSize: "12px",
-            color: "#eee",
-            wordBreak: "break-all",
-          }}>
+          <div className="detail-result-box">
             <p style={{ marginBottom: "6px", color: detailResult.unmasked ? "#4caf50" : "#ff9800", fontWeight: "bold" }}>
               {detailResult.unmasked ? "✅ Unmasked" : "⚠️ Still masked"}
             </p>
@@ -268,13 +350,13 @@ function App() {
                 ["🧾 Tax No.",    detailResult.data.tax_number],
               ] as [string, string][]
             ).map(([label, value]) => (
-              <div key={label} style={{ marginBottom: "4px" }}>
-                <span style={{ color: "#aaa" }}>{label}: </span>
+              <div key={label} className="detail-row">
+                <span className="detail-label">{label}: </span>
                 <span>{value || "—"}</span>
               </div>
             ))}
             {detailResult.clicked_by && (
-              <p style={{ marginTop: "8px", color: "#888", fontSize: "11px" }}>
+              <p className="detail-clicked-by">
                 clicked_by: {detailResult.clicked_by}
               </p>
             )}

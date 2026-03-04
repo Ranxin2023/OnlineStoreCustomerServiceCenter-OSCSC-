@@ -11,18 +11,16 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
   - 如果是第一次使用，需要先手动在弹出的 Chrome 中登录速卖通，再重试
 """
 
-import os
-import time
 from dotenv import load_dotenv
-
 from flask import Blueprint, request, jsonify, send_file
-
 from models.web_scrapy_model import WebScrapyModel
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.scrape_order_helper import setup_driver, save_orders_to_xlsx
+import os
+import re
+import time
 
 load_dotenv()
 
@@ -30,12 +28,13 @@ web_scrapy_bp = Blueprint("web_scrapy", __name__)
 
 # ── constant variables ──────────────────────────────────────────────
 CHANNEL_ID       = "98158"
-BASE_URL         = "https://csp.aliexpress.com"
+BASE_URL         = os.getenv("BASE_URL")
 PAGE_DELAY       = 3    # 翻页等待秒数
 CHROME_PATH      = os.getenv("CHROME_PATH")
 DEBUG_PORT       = 9222
 LOADING_TIME = 15
 
+# ── setup driver ──────────────────────────────────────────────
 driver=setup_driver()
 web_scrapy_model=WebScrapyModel(driver=driver)
 
@@ -54,6 +53,10 @@ def scrape_web_page():
 
     data      = request.get_json()
     url       = data.get("url")
+    channel_id = None
+    m = re.search(r"channelId=(\d+)", url)
+    if m:
+        channel_id = m.group(1)
     max_pages = data.get("max_pages", None)  # 可选，不传则抓全部
 
     if not url:
@@ -62,7 +65,7 @@ def scrape_web_page():
     print(f"Start scraping: {url}, max_pages: {max_pages or 'ALL'}")
 
     try:
-        all_orders = web_scrapy_model.crawl_orders(url, max_pages=max_pages)
+        all_orders = web_scrapy_model.crawl_orders(url, max_pages=max_pages, channel_id=channel_id)
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
 

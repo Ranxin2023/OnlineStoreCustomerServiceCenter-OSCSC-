@@ -8,7 +8,7 @@ import time
 
 load_dotenv()
 LOADING_TIME = 15
-CHANNEL_ID       = "98158"
+CHANNEL_ID = "1579616"
 BASE_URL         = os.getenv("BASE_URL")
 PAGE_DELAY       = 3    # 翻页等待秒数
 # <span class="header--value--E2HYUZn header--valueHighLight--wCk3sLF">8209013605484399</span>
@@ -115,10 +115,12 @@ class WebScrapyModel:
                     order_id_el=order_el["order_id_el"]
                     order_id = order_id_el.text.strip()
                     order['order_id'] = order_id
+                    cid=self.channel_id if self.channel_id else CHANNEL_ID
                     order['order_link'] = (
                         f"{BASE_URL}/m_apps/order-manage/"
-                        f"orderDetail?orderId={order_id}&channelId={CHANNEL_ID}"
+                        f"orderDetail?orderId={order_id}&channelId={cid}"
                     )
+                    print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
                 except Exception as e:
                     print(f"  [订单号解析失败] {e}")
                     order['order_id']   = ""
@@ -232,13 +234,21 @@ class WebScrapyModel:
     # 主抓取流程
     # ─────────────────────────────────────────────────────
 
-    def crawl_orders(self, order_list_url, max_pages=None):
+    def crawl_orders(self, order_list_url, max_pages=None, channel_id=None):
+        self.channel_id=channel_id
         # 连接已有 Chrome，绝对不能调 driver.quit()，否则会关掉用户的浏览器
         
 
-        print(f"Opening order list: {order_list_url}")
+        print(f"Opening order list: {order_list_url} and Channel id: {channel_id}")
         self.driver.get(order_list_url)
+        time.sleep(2)
 
+        self.driver.execute_script("""
+        localStorage.clear();
+        sessionStorage.clear();
+        """)
+
+        self.driver.refresh()
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
             WebDriverWait(self.driver, 30).until(
