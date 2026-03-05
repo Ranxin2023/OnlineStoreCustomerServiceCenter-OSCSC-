@@ -16,11 +16,17 @@ interface DetailResult {
   clicked_by: string | null;
   debug_elements: any[];
 }
-
+type Store = "store1" | "store2" | "store3";
 const STORE_URLS = {
   store1: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=98158",
   store2: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1471480",
   store3: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196",
+  
+};
+const STORE_CHANNEL_ID: Record<Store, string>= {
+  store1: "98158",
+  store2: "1471480",
+  store3: "1579196",
   
 };
 
@@ -41,19 +47,31 @@ function App() {
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
 
   // ── 处理订单列表爬取 ──────────────────────────────
-  const setupDriver = async (channelId: string) => {
+  
+  const handleSetupDriver = async (store: Store) => {
+  try {
 
-    await fetch("/api/web-scrapy/setup-driver", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        channel_id: channelId
-      })
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/web-scrapy/setup-driver`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ channelId: STORE_CHANNEL_ID[store]})
+      }
+    );
 
+    if (!response.ok) {
+      throw new Error("Failed to setup driver");
+    }
+
+    alert(`Driver for ${store} ready. Please login if needed.`);
+
+  } catch (err: any) {
+    alert(err.message || "Setup failed");
   }
+};
   const handleScrape = async (
     url: string,
     setError: React.Dispatch<React.SetStateAction<string | null>>,
@@ -146,14 +164,33 @@ function App() {
           value={scrapeUrl}
           onChange={(e) => setScrapeUrl(e.target.value)}
         />
+        <h3>Setup Driver</h3>
+      <div className="store-grid">
+        <button
+          className="sidebar-btn"
+          onClick={() => handleSetupDriver("store1")}
+        >
+           点我后登录一店
+        </button>
+
         <button
           className="sidebar-btn"
           onClick={handleScrapeStore1}
           disabled={loading1}
-        >
+          >
           {loading1 ? "Scraping..." : "🔍 Scrape Store1"}
         </button>
         {error1 && <p className="error-text">{error1}</p>}
+      </div>
+        <div className="store-grid">
+        <button
+          className="sidebar-btn"
+          onClick={() => handleSetupDriver("store2")}
+        >
+          点我后登录二店
+        </button>
+
+      
         <button
           className="sidebar-btn"
           onClick={handleScrapeStore2}
@@ -162,14 +199,25 @@ function App() {
           {loading2 ? "Scraping..." : "🔍 Scrape Store2"}
         </button>
         {error2 && <p className="error-text">{error2}</p>}
+        </div>
+
+        <div className="store-grid">
+        <button
+          className="sidebar-btn"
+          onClick={() => handleSetupDriver("store3")}
+          >
+          点我后登录三店
+        </button>
+
         <button
           className="sidebar-btn"
           onClick={handleScrapeStore3}
           disabled={loading3}
-        >
+          >
           {loading3 ? "Scraping..." : "🔍 Scrape Store3"}
         </button>
         {error3 && <p className="error-text">{error3}</p>}
+        </div>
 
         {/* ── 订单详情爬取 ── */}
         <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
@@ -179,18 +227,17 @@ function App() {
           placeholder="Order detail URL"
           value={detailUrl}
           onChange={(e) => setDetailUrl(e.target.value)}
-        />
+          />
         <button
           className="sidebar-btn"
           onClick={handleScrapeDetail}
           disabled={detailLoading}
-        >
+          >
           {detailLoading ? "Loading..." : "📦 Scrape Detail"}
         </button>
         {detailError && (
           <p style={{ color: "salmon", fontSize: "12px" }}>{detailError}</p>
         )}
-
         {/* 详情结果展示 */}
         {detailResult && (
           <div className="detail-result-box">

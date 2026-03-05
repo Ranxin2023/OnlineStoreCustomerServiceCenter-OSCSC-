@@ -85,7 +85,21 @@ def scrape_web_page():
         download_name=xlsx_name
     )
 
+@web_scrapy_bp.route("/api/web-scrapy/setup-driver", methods=["POST"])
+def setup_driver_route():
 
+    data = request.get_json()
+    channel_id = data.get("channelId")
+    print(f"chanel id is{channel_id}")
+    try:
+        get_driver(channel_id, driver_pool)
+
+        return jsonify({
+            "message": f"Driver for channel {channel_id} initialized"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # @web_scrapy_bp.route("/api/web-scrapy/scrape-detail", methods=["POST", "OPTIONS"])
