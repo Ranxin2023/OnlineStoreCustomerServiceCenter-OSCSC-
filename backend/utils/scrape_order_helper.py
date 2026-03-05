@@ -73,18 +73,17 @@ def get_driver(channel_id, driver_pool):
 def save_orders_to_xlsx(all_orders, store):
 
     base_dir     = os.path.dirname(os.path.abspath(__file__))
-    download_dir = os.path.join(base_dir, "..", "downloads")
+    download_dir = os.path.join(base_dir, "..", "..", "downloads")
     os.makedirs(download_dir, exist_ok=True)
 
     filename = "order_list.xlsx"
     filepath = os.path.join(download_dir, filename)
 
     headers = [
-        "Store",   # 新增
-        "Order ID", "Order Link", "Date", "Buyer",
+        "Store",  "Order ID",  "Date", "Buyer",
         "Product", "Specs", "SKU", "Price", "Qty", "Amount",
         "Status (中文)", "Status (EN)", "AE/IOSS", "Semi-Managed", "Action",
-        "Recipient", "Address", "Postal Code", "Email", "Phone", "Tax Number"
+        "Recipient", "Address", "Postal Code", "Email", "Phone", "Tax Number", "Order Link"
     ]
 
     existing_orders = {}
@@ -104,9 +103,9 @@ def save_orders_to_xlsx(all_orders, store):
                 if order_id:
                     row = list(row)
 
-                    if row[3] and not isinstance(row[3], datetime):
+                    if row[2] and not isinstance(row[2], datetime):
                         try:
-                            row[3] = datetime.strptime(str(row[3]), "%Y-%m-%d %H:%M:%S")
+                            row[2] = datetime.strptime(str(row[2]), "%Y-%m-%d %H:%M:%S")
                         except Exception:
                             pass
 
@@ -122,21 +121,44 @@ def save_orders_to_xlsx(all_orders, store):
 
         order_id = order.get('order_id', '').strip()
 
-        if order_id:
+        if order_id is None:
+            continue
 
-            raw_date = order.get('date', '')
+        raw_date = order.get('date', '')
 
-            try:
-                parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
-            except Exception:
-                parsed_date = None
+        # print(f"[save orders to xlsx]Raw date is {raw_date}")
+        # try:
+        #     # 如果是纯数字（时间戳）
+        #     if raw_date.isdigit():
+        #             ts = int(raw_date)
 
-            existing_orders[order_id] = [
+        #             # 16位 → 微秒
+        #             if len(raw_date) >= 16:
+        #                 ts = ts / 1_000_000
+        #             # 13位 → 毫秒
+        #             elif len(raw_date) == 13:
+        #                 ts = ts / 1000
+
+        #             parsed_date = datetime.fromtimestamp(ts)
+
+        #     else:
+        #             # 原本字符串格式
+        #             parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
+
+        # except Exception as e:
+        #         print(f"[日期解析失败] {raw_date} -> {e}")
+        #         parsed_date = None
+        # print(f"[save orders to xlsx]Date parsed is {raw_date}")
+        parsed_date=None
+        try:
+            parsed_date = datetime.strptime(raw_date, "%m/%d/%Y %H:%M")
+        except Exception:
+            pass
+        existing_orders[order_id] = [
 
                 store,  # 新增 store
 
                 "'" + order.get('order_id', ''),
-                order.get('order_link', ''),
                 parsed_date,
                 order.get('buyer', ''),
                 order.get('product', ''),
@@ -156,17 +178,17 @@ def save_orders_to_xlsx(all_orders, store):
                 order.get('email', ''),
                 order.get('phone', ''),
                 order.get('tax_number', ''),
+                order.get('order_link', ''),
             ]
 
     # ── 排序 ─────────────────────────────────────────
     def sort_key(row):
-        date_val = row[3]
+        date_val = row[2]
         if isinstance(date_val, datetime):
             return date_val
         return datetime.min
 
     sorted_rows = sorted(existing_orders.values(), key=sort_key, reverse=True)
-
     # ── 写入 Excel ──────────────────────────────────
     wb = Workbook()
     ws = wb.active
@@ -192,13 +214,13 @@ def save_orders_to_xlsx(all_orders, store):
             if col == 4 and isinstance(value, datetime):
                 cell.number_format = "YYYY-MM-DD HH:MM:SS"
 
-        link_val = values[2]
+        link_val = values[-1]
 
         if link_val:
-            ws.cell(row=row_idx, column=3).hyperlink = link_val
-            ws.cell(row=row_idx, column=3).font = Font(color="0563C1", underline="single")
+            ws.cell(row=row_idx, column=len(values)).hyperlink = link_val
+            ws.cell(row=row_idx, column=len(values)).font = Font(color="0563C1", underline="single")
 
-    col_widths = [10,20,50,18,12,40,25,15,12,6,12,16,20,8,14,20,20,35,12,25,15,15]
+    col_widths = [10,20,18,12,40,25,15,12,6,12,16,20,8,14,20,20,50,12,25,15,15, 75]
 
     for col, width in enumerate(col_widths, 1):
         ws.column_dimensions[get_column_letter(col)].width = width

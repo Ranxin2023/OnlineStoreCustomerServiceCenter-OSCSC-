@@ -14,7 +14,7 @@ PAGE_DELAY       = 3    # 翻页等待秒数
 # <span class="header--value--E2HYUZn header--valueHighLight--wCk3sLF">8209013605484399</span>
 tag_list = [
     ("order_id_el","span.header--valueHighLight--wCk3sLF", False), 
-    ("time_el","span.header--value--E2HYUZn", True), 
+    ("time_el","span.header--value--E2HYUZn:not(.header--valueHighLight--wCk3sLF)", True), 
     ("buyer_el","a.buyerInfo--inline--U3y4fIR", False),
     ("product_el","span.productInfo--itemTitle--QshSnPH", False),
     ("sku_el","span.productInfo--skuCodeValue--FJA_1Ru", True),
@@ -131,6 +131,7 @@ class WebScrapyModel:
                     time_els=order_el["time_el"]
                     
                     order['date'] = time_els[0].text.strip() if time_els else ""
+                    print(f"[parse_orders_from_page] Order Date is {order['date']}")
                 except Exception:
                     order['date'] = ""
 
