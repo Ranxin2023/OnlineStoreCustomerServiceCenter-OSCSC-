@@ -3,7 +3,7 @@
 echo Creating .env file...
 
 (
-echo LOCALHOST_URL=http://localhost:5001
+echo VITE_LOCALHOST_API_URL=http://localhost:5001
 echo CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 echo CHROME_USER_DATA=C:\Users\%USERNAME%\chrome-selenium
 echo BASE_URL=https://csp.aliexpress.com
