@@ -6,3 +6,4 @@ openpyxl
 gunicorn
 dotenv
 flask_socketio
+eventlet
