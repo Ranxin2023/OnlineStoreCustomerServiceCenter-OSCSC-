@@ -2,8 +2,8 @@ import os
 from helper_functions.constant_values import profile_map
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+# from selenium.webdriver.chrome.service import Service
+# from webdriver_manager.chrome import ChromeDriverManager
 def setup_driver(channel_id):
     profile_name = profile_map.get(channel_id)
 
@@ -29,9 +29,9 @@ def setup_driver(channel_id):
     options.add_argument("--window-size=1920,1080")
 
     # driver = webdriver.Chrome(options=options)
-    service = Service(ChromeDriverManager().install())
+    # service = Service(ChromeDriverManager().install())
 
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(options=options)
     return driver
 
 def get_driver(channel_id, driver_pool):

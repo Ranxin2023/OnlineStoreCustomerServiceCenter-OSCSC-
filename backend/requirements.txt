@@ -7,3 +7,4 @@ gunicorn
 dotenv
 flask_socketio
 eventlet
+chromedriver-binary
