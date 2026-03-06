@@ -2,7 +2,8 @@ import os
 from helper_functions.constant_values import profile_map
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 def setup_driver(channel_id):
     profile_name = profile_map.get(channel_id)
 
@@ -17,11 +18,20 @@ def setup_driver(channel_id):
 
     options = Options()
 
-    options.add_argument(f"--user-data-dir={profile_dir}")
-    options.add_argument("--disable-blink-features=AutomationControlled")
+    # options.add_argument(f"--user-data-dir={profile_dir}")
+    # options.add_argument("--disable-blink-features=AutomationControlled")
+    options.binary_location = "/usr/bin/chromium"
 
-    driver = webdriver.Chrome(options=options)
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
 
+    # driver = webdriver.Chrome(options=options)
+    service = Service(ChromeDriverManager().install())
+
+    driver = webdriver.Chrome(service=service, options=options)
     return driver
 
 def get_driver(channel_id, driver_pool):
