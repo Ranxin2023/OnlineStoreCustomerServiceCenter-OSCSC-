@@ -2,7 +2,7 @@ import { useState, useEffect} from "react";
 import "./App.css";
 import { io } from "socket.io-client";
 
-const socket = io(`${import.meta.env.VITE_API_URL}`);
+const socket = io(`${import.meta.env.LOCALHOST_URL}`);
 interface OrderDetail {
   recipient: string;
   address: string;
@@ -79,7 +79,7 @@ function App() {
     try {
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/web-scrapy/setup-driver`,
+        `${import.meta.env.LOCALHOST_URL}/api/web-scrapy/setup-driver`,
         {
           method: "POST",
           headers: {
@@ -111,7 +111,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape`, {
+      const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url }),
@@ -159,7 +159,7 @@ function App() {
     setDetailError(null);
     setDetailResult(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/web-scrapy/scrape-detail`, {
+      const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape-detail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: detailUrl }),

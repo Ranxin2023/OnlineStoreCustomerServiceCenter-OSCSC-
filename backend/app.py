@@ -3,7 +3,7 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 
-# from sockets.socket_bp import socketio
+from sockets.socket_bp import socketio
 from sockets.socket_bp import init_socket
 
 from routes.web_scrapy_route import web_scrapy_bp
@@ -23,10 +23,10 @@ def create_app():
 
     return app
 
-# if __name__ == "__main__":
-#     app = create_app()
+if __name__ == "__main__":
+    app = create_app()
     
-#     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
 
 #  For deploying
 # if __name__ == "__main__":
@@ -40,4 +40,4 @@ def create_app():
 #         port=port
 #     )
 
-app = create_app()
+# app = create_app()

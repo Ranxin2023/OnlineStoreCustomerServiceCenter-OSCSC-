@@ -30,3 +30,5 @@ downloads/
 .env
 package-lock.json
 chrome_profiles/
+
+backend/render_build.sh
