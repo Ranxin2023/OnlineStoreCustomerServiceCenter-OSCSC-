@@ -28,5 +28,5 @@ debug*
 websites/
 downloads/
 .env
-
+package-lock.json
 chrome_profiles/

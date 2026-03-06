@@ -2,29 +2,15 @@ from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from utils.scrape_order_helper import translate_status
-import os
+from helper_functions.utils import translate_status
+from helper_functions.constant_values import tag_list, LOADING_TIME, BASE_URL, SWITCHING_TIME
 import time
 
 load_dotenv()
-LOADING_TIME = 15
+
 CHANNEL_ID = "1579616"
-BASE_URL         = os.getenv("BASE_URL")
-PAGE_DELAY       = 3    # 翻页等待秒数
-# <span class="header--value--E2HYUZn header--valueHighLight--wCk3sLF">8209013605484399</span>
-tag_list = [
-    ("order_id_el","span.header--valueHighLight--wCk3sLF", False), 
-    ("time_el","span.header--value--E2HYUZn:not(.header--valueHighLight--wCk3sLF)", True), 
-    ("buyer_el","a.buyerInfo--inline--U3y4fIR", False),
-    ("product_el","span.productInfo--itemTitle--QshSnPH", False),
-    ("sku_el","span.productInfo--skuCodeValue--FJA_1Ru", True),
-    ("price_el","span.productInfo--unitFee--mVPKC9G", False),
-    ("qty_el","td[data-next-table-col='3'] div", False),
-    ("amount_el","div.amount--amount--YdsJokJ", False),
-    ("status_el","div.chc-state-label__stateText", False),
-    ("tag_el","span.chc-color-tag", True),
-    ("btns","button.next-btn span.next-btn-helper", True)
-]
+PAGE_DELAY = 3    # 翻页等待秒数
+
 class WebScrapyModel:
     def __init__(self):
         pass
@@ -120,7 +106,7 @@ class WebScrapyModel:
                         f"{BASE_URL}/m_apps/order-manage/"
                         f"orderDetail?orderId={order_id}&channelId={cid}"
                     )
-                    print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
+                    # print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
                 except Exception as e:
                     print(f"  [订单号解析失败] {e}")
                     order['order_id']   = ""
@@ -131,7 +117,7 @@ class WebScrapyModel:
                     time_els=order_el["time_el"]
                     
                     order['date'] = time_els[0].text.strip() if time_els else ""
-                    print(f"[parse_orders_from_page] Order Date is {order['date']}")
+                    # print(f"[parse_orders_from_page] Order Date is {order['date']}")
                 except Exception:
                     order['date'] = ""
 
@@ -242,12 +228,12 @@ class WebScrapyModel:
 
         print(f"Opening order list: {order_list_url} and Channel id: {channel_id}")
         self.driver.get(order_list_url)
-        time.sleep(2)
+        time.sleep(SWITCHING_TIME)
 
         
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
-            WebDriverWait(self.driver, 30).until(
+            WebDriverWait(self.driver, LOADING_TIME).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
             )
             print("OK 订单列表页已加载")
@@ -258,7 +244,7 @@ class WebScrapyModel:
         print("⏳ 请在浏览器里点击【查询】按钮，程序将自动继续...")
         try:
             # 找到查询按钮，注入 JS 监听点击事件，点击后设置一个标记
-            query_btn = WebDriverWait(self.driver, 30).until(
+            query_btn = WebDriverWait(self.driver, LOADING_TIME).until(
                 EC.presence_of_element_located(
                     (By.XPATH, "//button[.//span[text()='查询']]")
                 )
@@ -275,13 +261,13 @@ class WebScrapyModel:
                 lambda d: d.execute_script("return window.__query_clicked === true;")
             )
             print("OK 检测到用户点击查询，等待列表刷新...")
-            time.sleep(2)
+            time.sleep(SWITCHING_TIME)
 
-            WebDriverWait(self.driver, 15).until(
+            WebDriverWait(self.driver, LOADING_TIME).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
             )
             print("OK 订单列表已加载，开始抓取...")
-            time.sleep(1)
+            time.sleep(SWITCHING_TIME)
         except Exception as e:
             print(f"WARN 等待查询超时，尝试继续: {e}")
 
@@ -414,7 +400,7 @@ class WebScrapyModel:
             except Exception:
                 # 等待超时就兜底等 2 秒再读，避免空结果
                 print("    WARN 等待收件人脱敏超时，延迟2秒后继续")
-                time.sleep(2)
+                time.sleep(SWITCHING_TIME)
 
 
             # ── 读取地址字段 ──
@@ -441,12 +427,6 @@ class WebScrapyModel:
                         result['tax_number'] = value
                 except Exception:
                     continue
-            print(f"recipient: {result['recipient']}")
-            print(f"address: {result['address']}")
-            print(f"postal_code: {result['postal_code']}")
-            print(f"email: {result['email']}")
-            print(f"phone: {result['phone']}")
-            print(f"tax_number: {result['tax_number']}")
 
         except Exception as e:
             print(f"  [详情页错误] {e}")

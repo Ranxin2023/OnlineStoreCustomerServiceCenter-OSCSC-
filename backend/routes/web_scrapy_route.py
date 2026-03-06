@@ -14,15 +14,15 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
 from dotenv import load_dotenv
 from flask import Blueprint, request, jsonify, send_file
 from models.web_scrapy_model import WebScrapyModel
-from utils.scrape_order_helper import  save_orders_to_xlsx, get_driver
-from utils.web_scrape_constant_values import profile_map
+from helper_functions.save_excel import  save_orders_to_xlsx
+from helper_functions.driver import get_driver
+from helper_functions.constant_values import profile_map
 import os
 import re
 
 load_dotenv()
 
 web_scrapy_bp = Blueprint("web_scrapy", __name__)
-
 # ── constant variables ──────────────────────────────────────────────
 
 PAGE_DELAY       = 3    # 翻页等待秒数

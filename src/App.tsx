@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import "./App.css";
+import { io } from "socket.io-client";
 
+const socket = io("http://localhost:5000");
 interface OrderDetail {
   recipient: string;
   address: string;
@@ -45,33 +47,58 @@ function App() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
+  
+  // ── 日志获取 ──────────────────────────────────
+  const [logs, setLogs] = useState<string[]>([]);
+  const addLog = (msg: string) => {
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  };
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Socket connected");
+      addLog("Socket connected");
+    });
 
+    // socket.on("scrape_log", (data: { msg: string }) => {
+    //   setLogs(prev => [
+    //     ...prev,
+    //     `[${new Date().toLocaleTimeString()}] ${data.msg}`
+    //   ]);
+    // });
+    socket.on("scrape_log", (data) => {
+      console.log("SCRAPE LOG:", data);
+      addLog(data.msg);
+    });
+    return () => {
+      socket.off("scrape_log");
+    };
+  }, []);
   // ── 处理订单列表爬取 ──────────────────────────────
   
   const handleSetupDriver = async (store: Store) => {
-  try {
+    try {
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/web-scrapy/setup-driver`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ channelId: STORE_CHANNEL_ID[store]})
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/web-scrapy/setup-driver`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ channelId: STORE_CHANNEL_ID[store]})
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to setup driver");
       }
-    );
 
-    if (!response.ok) {
-      throw new Error("Failed to setup driver");
+      alert(`Driver for ${store} ready. Please login if needed.`);
+
+    } catch (err: any) {
+      alert(err.message || "Setup failed");
     }
-
-    alert(`Driver for ${store} ready. Please login if needed.`);
-
-  } catch (err: any) {
-    alert(err.message || "Setup failed");
-  }
-};
+  };
   const handleScrape = async (
     url: string,
     setError: React.Dispatch<React.SetStateAction<string | null>>,
@@ -107,8 +134,10 @@ function App() {
     }
   }
   const handleScrapeStore1 = async () => {
+    addLog("Start scraping Store1");
     const url=STORE_URLS.store1
     handleScrape(url, setError1, setLoading1)
+    addLog("Finished scraping Store1");
   };
   const handleScrapeStore2 = async () => {
     const url=STORE_URLS.store2
@@ -155,7 +184,7 @@ function App() {
         <button className="sidebar-btn">📞 Contact Support</button>
         <button className="sidebar-btn">🧾 My Reservations</button>
         <button className="sidebar-btn">❓ FAQs</button>
-
+        <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
         {/* ── 订单列表爬取 ── */}
         <input
           className="sidebar-input"
@@ -267,7 +296,30 @@ function App() {
           </div>
         )}
       </aside>
+          {/* Main log area */}
+        <main className="log-container">
+        <div className="log-header">
+          <h3>Scraper Logs</h3>
+          <button
+            onClick={() => setLogs([])}
+            style={{ marginLeft: "auto" }}
+          >
+            Clear
+          </button>
+        </div>
 
+        <div className="log-messages">
+          {logs.length === 0 ? (
+            <div className="log-empty">No logs yet...</div>
+          ) : (
+            logs.map((log, i) => (
+              <div key={i} className="log-line">
+                {log}
+              </div>
+            ))
+          )}
+        </div>
+      </main>
       {/* Main chatbot area */}
       <main className="chat-container">
         <div className="chat-header">
@@ -283,6 +335,7 @@ function App() {
           <button>Send</button>
         </div>
       </main>
+      
     </div>
   );
 }
