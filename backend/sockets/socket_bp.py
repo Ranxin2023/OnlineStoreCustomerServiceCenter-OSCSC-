@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 import builtins
 socket_bp = Blueprint("socket_bp", __name__)
 
-socketio = SocketIO(cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(cors_allowed_origins="*")
 
 
 old_print = print

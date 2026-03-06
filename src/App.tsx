@@ -2,7 +2,7 @@ import { useState, useEffect} from "react";
 import "./App.css";
 import { io } from "socket.io-client";
 
-const socket = io(`${import.meta.env.LOCALHOST_URL}`);
+const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
 interface OrderDetail {
   recipient: string;
   address: string;
@@ -53,6 +53,8 @@ function App() {
   const addLog = (msg: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
+  // console.log(`Socket url is:${import.meta.env.VITE_LOCALHOST_API_URL}`)
+  // console.log(`Public url is:${import.meta.env.VITE_API_URL}`)
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket connected");
@@ -79,7 +81,7 @@ function App() {
     try {
 
       const response = await fetch(
-        `${import.meta.env.LOCALHOST_URL}/api/web-scrapy/setup-driver`,
+        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/web-scrapy/setup-driver`,
         {
           method: "POST",
           headers: {
@@ -111,7 +113,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCALHOST_API_URL}/api/web-scrapy/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url }),
