@@ -20,7 +20,7 @@ def setup_driver(channel_id):
 
     # options.add_argument(f"--user-data-dir={profile_dir}")
     # options.add_argument("--disable-blink-features=AutomationControlled")
-    options.binary_location = "/usr/bin/chromium"
+    # options.binary_location = "/usr/bin/chromium"
 
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
