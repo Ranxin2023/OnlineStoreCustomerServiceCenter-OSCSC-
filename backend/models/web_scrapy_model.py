@@ -1,25 +1,39 @@
+from datetime import datetime
 from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_functions.utils import translate_status
-from helper_functions.constant_values import tag_list, LOADING_TIME, BASE_URL, SWITCHING_TIME
+from helper_functions.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME
+from helper_functions.load_latest_files import get_latest_fetch
 import time
 
 load_dotenv()
 
 CHANNEL_ID = "1579616"
-PAGE_DELAY = 3    # 翻页等待秒数
+PAGE_DELAY = 2    # 翻页等待秒数
 
 class WebScrapyModel:
     def __init__(self):
-        pass
-    
+        self.table_tag_id="table.next-table-row"
+        self.address_tag_id="div[class*='orderInfo--addressItem']"
+        self.tag_list = [
+            ("order_id_el","span.header--valueHighLight--wCk3sLF", False), 
+            ("time_el","span.header--value--E2HYUZn:not(.header--valueHighLight--wCk3sLF)", True), 
+            ("buyer_el","a.buyerInfo--inline--U3y4fIR", False),
+            ("product_el","span.productInfo--itemTitle--QshSnPH", False),
+            ("sku_el","span.productInfo--skuCodeValue--FJA_1Ru", True),
+            ("price_el","span.productInfo--unitFee--mVPKC9G", False),
+            ("qty_el","td[data-next-table-col='3'] div", False),
+            ("amount_el","div.amount--amount--YdsJokJ", False),
+            ("status_el","div.chc-state-label__stateText", False),
+            ("tag_el","span.chc-color-tag", True),
+            ("btns","button.next-btn span.next-btn-helper", True)
+        ]
+
     # ─────────────────────────────────────────────────────
     # 翻页
     # ─────────────────────────────────────────────────────
-
-
     def get_total_pages(self):
         """从分页显示元素读取总页数，例如 '1/30' 返回 30"""
         try:
@@ -69,13 +83,13 @@ class WebScrapyModel:
         # wait for the table to be loaded
         try:
             WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, self.table_tag_id))
             )
         except Exception:
             print("  [警告] 订单表格未加载")
             return all_orders
 
-        tables = self.driver.find_elements(By.CSS_SELECTOR, "table.next-table-row")
+        tables = self.driver.find_elements(By.CSS_SELECTOR, self.table_tag_id)
         print(f"  找到 {len(tables)} 个订单")
         
         for table in tables:
@@ -83,7 +97,7 @@ class WebScrapyModel:
             order = {}
             # find all the tags
             try:
-                for tag, tag_id, is_multi in tag_list:
+                for tag, tag_id, is_multi in self.tag_list:
                     try:
                         if is_multi:
                             order_el[tag] = table.find_elements(By.CSS_SELECTOR, tag_id)
@@ -234,43 +248,107 @@ class WebScrapyModel:
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
             WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, self.table_tag_id))
             )
             print("OK 订单列表页已加载")
         except Exception:
             print("WARN 等待订单列表超时，尝试继续...")
 
         # 等待用户在浏览器里点击查询按钮
-        print("⏳ 请在浏览器里点击【查询】按钮，程序将自动继续...")
         try:
-            # 找到查询按钮，注入 JS 监听点击事件，点击后设置一个标记
+            store = f"store{self.channel_id}"
+
+            last_time = get_latest_fetch(store)
+
+            if last_time:
+                start_date = datetime.strptime(
+                    last_time, "%Y-%m-%d %H:%M:%S"
+                ).strftime("%Y-%m-%d")
+            else:
+                start_date = datetime.now().strftime("%Y-%m-%d")
+
+            end_date = datetime.now().strftime("%Y-%m-%d")
+
+            print(f"[AUTO TIME] {start_date} -> {end_date}")
+            start_input = self.driver.find_element(
+                By.CSS_SELECTOR, "input[placeholder*='开始']"
+            )
+
+            end_input = self.driver.find_element(
+                By.CSS_SELECTOR, "input[placeholder*='结束']"
+            )
+
+            self.driver.execute_script("""
+            arguments[0].value = arguments[1];
+            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('blur', {bubbles: true}));
+            """, start_input, start_date)
+
+            self.driver.execute_script("""
+            arguments[0].value = arguments[1];
+            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('blur', {bubbles: true}));
+            """, end_input, end_date)
+
+            start_val = self.driver.execute_script(
+                "return arguments[0].value;", start_input
+            )
+
+            end_val = self.driver.execute_script(
+                "return arguments[0].value;", end_input
+            )
+
+            print(f"[DEBUG] 开始时间 input value: {start_val}")
+            print(f"[DEBUG] 结束时间 input value: {end_val}")
+        except Exception as e:
+            print(f"WARN 自动填写时间失败: {e}")
+
+        try:
+            print("⌛ 请在浏览器中点击【查询】按钮...")
+
             query_btn = WebDriverWait(self.driver, LOADING_TIME).until(
                 EC.presence_of_element_located(
                     (By.XPATH, "//button[.//span[text()='查询']]")
                 )
             )
+
+            # 获取旧表格第一行（用于检测刷新）
+            old_first_row = self.driver.find_element(
+                By.CSS_SELECTOR, f"{self.table_tag_id} tbody tr"
+            )
+
+            # 重置点击状态
+            self.driver.execute_script("window.__query_clicked = false;")
+
+            # 监听点击
             self.driver.execute_script("""
                 arguments[0].addEventListener('click', function() {
                     window.__query_clicked = true;
                 });
             """, query_btn)
-            print("  监听查询按钮中，等待用户点击...")
 
-            # 等用户点击（最多 5 分钟）
+            print("⌛ 等待用户点击查询按钮...")
+
+            # 等待用户点击（最多 5 分钟）
             WebDriverWait(self.driver, 300).until(
                 lambda d: d.execute_script("return window.__query_clicked === true;")
             )
-            print("OK 检测到用户点击查询，等待列表刷新...")
+
+            print("OK 检测到用户点击查询，等待订单列表刷新...")
+
+            # 等待表格刷新
+            WebDriverWait(self.driver, LOADING_TIME).until(
+                EC.staleness_of(old_first_row)
+            )
+
+            print("OK 订单列表已加载，开始抓取...")
+
             time.sleep(SWITCHING_TIME)
 
-            WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "table.next-table-row"))
-            )
-            print("OK 订单列表已加载，开始抓取...")
-            time.sleep(SWITCHING_TIME)
         except Exception as e:
             print(f"WARN 等待查询超时，尝试继续: {e}")
-
         all_orders = []
         page = 1
 
@@ -329,7 +407,7 @@ class WebScrapyModel:
             try:
                 WebDriverWait(self.driver, 5).until(
                     EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "div[class*='orderInfo--addressItem']")
+                        (By.CSS_SELECTOR, self.address_tag_id)
                     )
                 )
             except Exception:
@@ -383,7 +461,7 @@ class WebScrapyModel:
             # ── 等收件人脱敏 ──
             # unmasked = False
             def recipient_unmasked(d):
-                items = d.find_elements(By.CSS_SELECTOR, "div[class*='orderInfo--addressItem']")
+                items = d.find_elements(By.CSS_SELECTOR, self.address_tag_id)
                 for item in items:
                     try:
                         label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
@@ -408,7 +486,7 @@ class WebScrapyModel:
                 'recipient': '', 'address': '', 'postal_code': '',
                 'email': '', 'phone': '', 'tax_number': ''
             }
-            address_items = self.driver.find_elements(By.CSS_SELECTOR, "div[class*='orderInfo--addressItem']")
+            address_items = self.driver.find_elements(By.CSS_SELECTOR, self.address_tag_id)
             for item in address_items:
                 try:
                     label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()

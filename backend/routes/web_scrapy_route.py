@@ -17,6 +17,8 @@ from models.web_scrapy_model import WebScrapyModel
 from helper_functions.save_excel import  save_orders_to_xlsx
 from helper_functions.driver import get_driver
 from helper_functions.constant_values import profile_map
+from helper_functions.load_latest_files import update_latest_fetch
+from database.order_repository import save_orders_to_db
 import os
 import re
 
@@ -25,10 +27,8 @@ load_dotenv()
 web_scrapy_bp = Blueprint("web_scrapy", __name__)
 # ── constant variables ──────────────────────────────────────────────
 
-PAGE_DELAY       = 3    # 翻页等待秒数
 CHROME_PATH      = os.getenv("CHROME_PATH")
 DEBUG_PORT       = os.getenv("DEBUG_PORT")
-LOADING_TIME = 15
 
 # ── setup driver ──────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ def scrape_web_page():
     driver = get_driver(channel_id, driver_pool=driver_pool)
     web_scrapy_model.driver=driver
     try:
-
+        # 1️. 爬订单
         all_orders = web_scrapy_model.crawl_orders(
             url,
             max_pages=max_pages,
@@ -75,7 +75,15 @@ def scrape_web_page():
     if not all_orders:
         return jsonify({"error": "No orders scraped"}), 400
     store=profile_map.get(channel_id, "unknown")
-    xlsx_path, xlsx_name = save_orders_to_xlsx(all_orders, store=store)
+    
+    # 2️. 保存数据库
+    new_orders =save_orders_to_db(all_orders, store)
+
+    # 3. 更新最新时间
+    update_latest_fetch(store)
+    
+    # 4.  保存Excel
+    xlsx_path, xlsx_name = save_orders_to_xlsx(new_orders, store=store)
     print(f"File saved: {xlsx_path}")
 
     return send_file(

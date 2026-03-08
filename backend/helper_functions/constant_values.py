@@ -3,7 +3,7 @@ import os
 BASE_URL  = os.getenv("BASE_URL")
 DEBUG_PORT = os.getenv("DEBUG_PORT")
 PAGE_LOADING_TIME = 30
-LOADING_TIME = 15
+LOADING_TIME = 20
 SWITCHING_TIME = 2
 profile_map = {
         "98158": "store1",
@@ -22,16 +22,3 @@ mapping = {
         '等待仓库发货': 'Awaiting warehouse shipment',
     }
 
-tag_list = [
-    ("order_id_el","span.header--valueHighLight--wCk3sLF", False), 
-    ("time_el","span.header--value--E2HYUZn:not(.header--valueHighLight--wCk3sLF)", True), 
-    ("buyer_el","a.buyerInfo--inline--U3y4fIR", False),
-    ("product_el","span.productInfo--itemTitle--QshSnPH", False),
-    ("sku_el","span.productInfo--skuCodeValue--FJA_1Ru", True),
-    ("price_el","span.productInfo--unitFee--mVPKC9G", False),
-    ("qty_el","td[data-next-table-col='3'] div", False),
-    ("amount_el","div.amount--amount--YdsJokJ", False),
-    ("status_el","div.chc-state-label__stateText", False),
-    ("tag_el","span.chc-color-tag", True),
-    ("btns","button.next-btn span.next-btn-helper", True)
-]
