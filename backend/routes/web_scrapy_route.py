@@ -17,7 +17,7 @@ from models.web_scrapy_model import WebScrapyModel
 from helper_functions.save_excel import  save_orders_to_xlsx
 from helper_functions.driver import get_driver
 from helper_functions.constant_values import profile_map
-from helper_functions.load_latest_files import update_latest_fetch
+from helper_functions.load_latest_files import LatestFetch
 from database.order_repository import save_orders_to_db
 import os
 import re
@@ -80,7 +80,8 @@ def scrape_web_page():
     new_orders =save_orders_to_db(all_orders, store)
 
     # 3. 更新最新时间
-    update_latest_fetch(store)
+    latest_fetch=LatestFetch()
+    latest_fetch.update_latest_fetch(store)
     
     # 4.  保存Excel
     xlsx_path, xlsx_name = save_orders_to_xlsx(new_orders, store=store)

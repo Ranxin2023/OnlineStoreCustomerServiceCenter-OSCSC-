@@ -75,7 +75,7 @@ function App() {
       socket.off("scrape_log");
     };
   }, []);
-  // ── 处理订单列表爬取 ──────────────────────────────
+  // ————————── 处理driver建立 ──────────────────────────────
   
   const handleSetupDriver = async (store: Store) => {
     try {
@@ -101,6 +101,8 @@ function App() {
       alert(err.message || "Setup failed");
     }
   };
+
+   // ──—————————— 处理订单爬取 ──────────────────────────────
   const handleScrape = async (
     url: string,
     setError: React.Dispatch<React.SetStateAction<string | null>>,
@@ -151,7 +153,7 @@ function App() {
     handleScrape(url, setError3, setLoading3)
   };
 
-  // ── 处理订单详情爬取 ──────────────────────────────
+  // ──—————————— 处理订单详情爬取 ──────────────────────────────
   const handleScrapeDetail = async () => {
     if (!detailUrl.startsWith("http")) {
       setDetailError("Please enter a valid URL");
@@ -175,7 +177,41 @@ function App() {
       setDetailLoading(false);
     }
   };
+  // ──—————————— 处理所有订单爬取 ──────────────────────────────
+  
+  const handleExportOrders = async () => {
+    try {
+      addLog("Exporting orders from database...");
 
+      const response = await fetch(
+        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/orders/export`,
+        { method: "GET" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export orders");
+      }
+
+      const blob = await response.blob();
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = downloadUrl;
+      a.download = "orders.xlsx";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(downloadUrl);
+
+      addLog("Orders exported to Excel");
+    } catch (err) {
+      console.error(err);
+      addLog("Export failed");
+    }
+  };
   return (
     <div className="app-layout">
       {/* Left sidebar */}
@@ -195,24 +231,33 @@ function App() {
           value={scrapeUrl}
           onChange={(e) => setScrapeUrl(e.target.value)}
         />
-        <h3>Setup Driver</h3>
-      <div className="store-grid">
+        
         <button
           className="sidebar-btn"
-          onClick={() => handleSetupDriver("store1")}
+          onClick={handleExportOrders}
         >
-           点我后登录一店
+          📥 Export Orders (DB → Excel)
         </button>
-
-        <button
-          className="sidebar-btn"
-          onClick={handleScrapeStore1}
-          disabled={loading1}
+        
+        {/* ── driver部分 ── */}
+        <h3>Setup Driver</h3>
+        <div className="store-grid">
+          <button
+            className="sidebar-btn"
+            onClick={() => handleSetupDriver("store1")}
           >
-          {loading1 ? "Scraping..." : "🔍 Scrape Store1"}
-        </button>
-        {error1 && <p className="error-text">{error1}</p>}
-      </div>
+            点我后登录一店
+          </button>
+
+          <button
+            className="sidebar-btn"
+            onClick={handleScrapeStore1}
+            disabled={loading1}
+            >
+            {loading1 ? "Scraping..." : "🔍 Scrape Store1"}
+          </button>
+          {error1 && <p className="error-text">{error1}</p>}
+        </div>
         <div className="store-grid">
         <button
           className="sidebar-btn"
@@ -298,8 +343,9 @@ function App() {
           </div>
         )}
       </aside>
-          {/* Main log area */}
-        <main className="log-container">
+      
+      {/* ---------Main log area--------------- */}
+      <main className="log-container">
         <div className="log-header">
           <h3>Scraper Logs</h3>
           <button
@@ -322,7 +368,8 @@ function App() {
           )}
         </div>
       </main>
-      {/* Main chatbot area */}
+
+      {/*------------ Main chatbot area -----------------*/}
       <main className="chat-container">
         <div className="chat-header">
           <h3>Customer Service Chat</h3>

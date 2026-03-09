@@ -1,17 +1,18 @@
 from datetime import datetime
 from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_functions.utils import translate_status
-from helper_functions.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME
-from helper_functions.load_latest_files import get_latest_fetch
+from helper_functions.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, profile_map
+from helper_functions.load_latest_files import LatestFetch
 import time
 
 load_dotenv()
 
 CHANNEL_ID = "1579616"
-PAGE_DELAY = 2    # 翻页等待秒数
+# PAGE_DELAY = 2    # 翻页等待秒数
 
 class WebScrapyModel:
     def __init__(self):
@@ -34,6 +35,7 @@ class WebScrapyModel:
     # ─────────────────────────────────────────────────────
     # 翻页
     # ─────────────────────────────────────────────────────
+    
     def get_total_pages(self):
         """从分页显示元素读取总页数，例如 '1/30' 返回 30"""
         try:
@@ -65,7 +67,7 @@ class WebScrapyModel:
                 return False
             self.driver.execute_script("arguments[0].click();", next_btn)
             print("  [翻页] 点击下一页成功")
-            time.sleep(PAGE_DELAY)
+            time.sleep(SWITCHING_TIME)
             return True
         except Exception as e:
             print(f"  [翻页] 未找到下一页按钮，停止: {e}")
@@ -254,11 +256,12 @@ class WebScrapyModel:
         except Exception:
             print("WARN 等待订单列表超时，尝试继续...")
 
-        # 等待用户在浏览器里点击查询按钮
         try:
-            store = f"store{self.channel_id}"
+            channel_id_ = channel_id if channel_id is not None else CHANNEL_ID
+            store = profile_map[channel_id_]
 
-            last_time = get_latest_fetch(store)
+            latest_fetch = LatestFetch()
+            last_time = latest_fetch.get_latest_fetch(store)
 
             if last_time:
                 start_date = datetime.strptime(
@@ -270,41 +273,44 @@ class WebScrapyModel:
             end_date = datetime.now().strftime("%Y-%m-%d")
 
             print(f"[AUTO TIME] {start_date} -> {end_date}")
-            start_input = self.driver.find_element(
-                By.CSS_SELECTOR, "input[placeholder*='开始']"
+
+            # 找到两个日期输入框
+            date_inputs = WebDriverWait(self.driver, LOADING_TIME).until(
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "input[placeholder*='开始'], input[placeholder*='结束']")
+                )
             )
 
-            end_input = self.driver.find_element(
-                By.CSS_SELECTOR, "input[placeholder*='结束']"
-            )
+            start_input = date_inputs[0]
+            end_input = date_inputs[1]
 
-            self.driver.execute_script("""
-            arguments[0].value = arguments[1];
-            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('blur', {bubbles: true}));
-            """, start_input, start_date)
+            # ---------- 填写开始时间 ----------
+            start_input.click()
+            start_input.send_keys(Keys.CONTROL + "a")
+            start_input.send_keys(start_date)
+            start_input.send_keys(Keys.ENTER)
 
-            self.driver.execute_script("""
-            arguments[0].value = arguments[1];
-            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('blur', {bubbles: true}));
-            """, end_input, end_date)
+            time.sleep(0.5)
 
-            start_val = self.driver.execute_script(
-                "return arguments[0].value;", start_input
-            )
+            # ---------- 填写结束时间 ----------
+            end_input.click()
+            end_input.send_keys(Keys.CONTROL + "a")
+            end_input.send_keys(end_date)
+            end_input.send_keys(Keys.ENTER)
 
-            end_val = self.driver.execute_script(
-                "return arguments[0].value;", end_input
-            )
+            time.sleep(1)
 
-            print(f"[DEBUG] 开始时间 input value: {start_val}")
-            print(f"[DEBUG] 结束时间 input value: {end_val}")
+            # 验证是否成功
+            start_val = start_input.get_attribute("value")
+            end_val = end_input.get_attribute("value")
+
+            print(f"[DEBUG] start value: {start_val}")
+            print(f"[DEBUG] end value: {end_val}")
+
         except Exception as e:
             print(f"WARN 自动填写时间失败: {e}")
 
+        # 等待用户在浏览器里点击查询按钮
         try:
             print("⌛ 请在浏览器中点击【查询】按钮...")
 
