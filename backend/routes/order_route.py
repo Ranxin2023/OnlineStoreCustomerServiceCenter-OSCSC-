@@ -37,8 +37,15 @@ def export_orders():
 
         if not orders:
             return jsonify({"error": "No orders found"}), 404
-
-        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, store=None)
+        filename = "order_list.xlsx"
+        headers = [
+            "Store", "Order ID", "Date", "Buyer",
+            "Product", "Specs", "SKU", "Price", "Qty", "Amount",
+            "Status (中文)", "Status (EN)", "AE/IOSS", "Semi-Managed", "Action",
+            "Recipient", "Address", "Postal Code", "Email", "Country","Phone", "Tax Number", "Order Link"
+        ]
+        col_widths = [10,20,18,12,40,25,15,12,6,12,16,20,8,14,20,20,50,12,25,15, 15,15,75]
+        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, store=None, filename=filename, headers=headers, col_widths=col_widths)
 
         return send_file(
             xlsx_path,

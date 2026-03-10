@@ -22,3 +22,21 @@ mapping = {
         '等待仓库发货': 'Awaiting warehouse shipment',
     }
 
+PHONE_COUNTRY_MAP = {
+    "+966": "SA",
+    "+1": "US",
+    "+44": "GB",
+    "+86": "CN",
+    "+91": "IN",
+    "+971": "AE",
+}
+
+ADDRESS_COUNTRY_MAP = {
+    "united states": "US",
+    "usa": "US",
+    "us": "US",
+    "canada": "CA",
+    "puerto rico": "PR",
+    "jamaica": "JM",
+    "bahamas": "BS",
+}

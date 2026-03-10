@@ -62,6 +62,7 @@ def scrape_web_page():
 
     driver = get_driver(channel_id, driver_pool=driver_pool)
     web_scrapy_model.driver=driver
+    all_orders=None
     try:
         # 1️. 爬订单
         all_orders = web_scrapy_model.crawl_orders(
@@ -71,7 +72,11 @@ def scrape_web_page():
         )
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
-
+    
+    print(f"[scrape_web_page]The length of all_orders is {len(all_orders)}")
+    # for order in all_orders:
+    #     print(f"{order}")
+    
     if not all_orders:
         return jsonify({"error": "No orders scraped"}), 400
     store=profile_map.get(channel_id, "unknown")
@@ -84,7 +89,24 @@ def scrape_web_page():
     latest_fetch.update_latest_fetch(store)
     
     # 4.  保存Excel
-    xlsx_path, xlsx_name = save_orders_to_xlsx(new_orders, store=store)
+    filename = f"order_list_{store}.xlsx"
+    headers = [
+        "Store", "Order ID", "Date", "Buyer","Product", "Specs", 
+        "SKU", "Price", "Qty", "Amount","Status (中文)", "Status (EN)", 
+        "AE/IOSS", "Semi-Managed", "Action","Recipient", "Address", "Postal Code", 
+        "Email", "Phone","Country","Tax Number", "Remark", "Order Link"
+    ]
+    keys=[
+        "order_id", "date", "buyer","product", "specs", 
+        "sku", "price", "qty", "amount","status", "status_en", 
+        "ae_ioss", "semi_managed", "action","recipient", "address", "postal_code", 
+        "email", "phone","country","tax_number", "remark", "order_link" 
+    ]
+    col_widths = [10,20,18,12,40,25,
+                  15,12,6,12,16,20,
+                  8,14,20,20,50,12,
+                  25,15, 15,15,15, 75]
+    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, store=store, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
     print(f"File saved: {xlsx_path}")
 
     return send_file(

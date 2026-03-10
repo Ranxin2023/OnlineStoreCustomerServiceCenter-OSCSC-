@@ -28,7 +28,7 @@ def save_orders_to_db(orders, store):
 
         cursor.execute("""
         INSERT INTO orders VALUES (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )
         """, (
             order.get("order_id"),
@@ -49,10 +49,12 @@ def save_orders_to_db(orders, store):
             order.get("action"),
             order.get("recipient"),
             order.get("address"),
+            order.get("country"),
             order.get("postal_code"),
             order.get("email"),
             order.get("phone"),
-            order.get("tax_number")
+            order.get("tax_number"),
+            order.get("remark")
         ))
 
     conn.commit()

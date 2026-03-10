@@ -32,6 +32,7 @@ def init_db():
         action TEXT,
         recipient TEXT,
         address TEXT,
+        country TEXT, 
         postal_code TEXT,
         email TEXT,
         phone TEXT,

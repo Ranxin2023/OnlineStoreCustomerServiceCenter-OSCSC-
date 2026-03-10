@@ -212,6 +212,29 @@ function App() {
       addLog("Export failed");
     }
   };
+  const handleDownloadSA = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/orders/sa`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download Saudi orders");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "SA_orders.xlsx";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Download failed");
+    }
+  };
   return (
     <div className="app-layout">
       {/* Left sidebar */}
@@ -278,21 +301,29 @@ function App() {
         </div>
 
         <div className="store-grid">
-        <button
-          className="sidebar-btn"
-          onClick={() => handleSetupDriver("store3")}
-          >
-          点我后登录三店
-        </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => handleSetupDriver("store3")}
+            >
+            点我后登录三店
+          </button>
 
-        <button
-          className="sidebar-btn"
-          onClick={handleScrapeStore3}
-          disabled={loading3}
+          <button
+            className="sidebar-btn"
+            onClick={handleScrapeStore3}
+            disabled={loading3}
+            >
+            {loading3 ? "Scraping..." : "🔍 Scrape Store3"}
+          </button>
+          {error3 && <p className="error-text">{error3}</p>}
+        </div>
+        <div className="store-grid">
+          <button
+            className="sidebar-btn"
+            onClick={handleDownloadSA}
           >
-          {loading3 ? "Scraping..." : "🔍 Scrape Store3"}
-        </button>
-        {error3 && <p className="error-text">{error3}</p>}
+            🇸🇦 Download Saudi Orders
+          </button>
         </div>
 
         {/* ── 订单详情爬取 ── */}

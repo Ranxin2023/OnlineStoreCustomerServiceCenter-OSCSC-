@@ -11,26 +11,40 @@ load_dotenv()
 # ─────────────────────────────────────────────────────
 # 保存 Excel
 # ─────────────────────────────────────────────────────
- 
+def save_sa_orders(orders):
 
+    from openpyxl import Workbook
 
-def save_orders_to_xlsx(new_orders, store):
+    wb = Workbook()
+    ws = wb.active
+
+    headers = [
+        "Order ID","Buyer","Address","Phone"
+    ]
+
+    ws.append(headers)
+
+    for o in orders:
+        ws.append([
+            o["order_id"],
+            o["buyer"],
+            o["address"],
+            o["phone"]
+        ])
+
+    filepath = "downloads/SA_orders.xlsx"
+    wb.save(filepath)
+
+    return filepath
+
+def save_orders_to_xlsx(data, store, filename, data_keys,excel_headers, col_widths):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")
     os.makedirs(download_dir, exist_ok=True)
 
-    filename = f"order_list_{store}.xlsx" if store else "order_list.xlsx"
+    
     filepath = os.path.join(download_dir, filename)
-
-    headers = [
-        "Store", "Order ID", "Date", "Buyer",
-        "Product", "Specs", "SKU", "Price", "Qty", "Amount",
-        "Status (中文)", "Status (EN)", "AE/IOSS", "Semi-Managed", "Action",
-        "Recipient", "Address", "Postal Code", "Email", "Phone", "Tax Number", "Order Link"
-    ]
-
-    col_widths = [10,20,18,12,40,25,15,12,6,12,16,20,8,14,20,20,50,12,25,15,15,75]
 
     old_rows = []
 
@@ -52,40 +66,49 @@ def save_orders_to_xlsx(new_orders, store):
     # ── 处理新订单 ─────────────────────────────
     new_rows = []
 
-    for order in new_orders:
-
+    for order in data:
+        # print(f"[save_orders_to_xlsx]Order row is {order}")
         raw_date = order.get("date", "")
 
-        parsed_date = None
-        try:
-            parsed_date = datetime.strptime(raw_date, "%m/%d/%Y %H:%M")
-        except Exception:
-            pass
-
-        new_rows.append([
-            store if store is not None else order.get('store', ''),
-            order.get('order_id', ''),
-            parsed_date,
-            order.get('buyer', ''),
-            order.get('product', ''),
-            order.get('specs', ''),
-            order.get('sku', ''),
-            order.get('price', ''),
-            order.get('qty', ''),
-            order.get('amount', ''),
-            order.get('status', ''),
-            order.get('status_en', ''),
-            order.get('ae_ioss', ''),
-            order.get('semi_managed', ''),
-            order.get('action', ''),
-            order.get('recipient', ''),
-            order.get('address', ''),
-            order.get('postal_code', ''),
-            order.get('email', ''),
-            order.get('phone', ''),
-            order.get('tax_number', ''),
-            order.get('order_link', ''),
-        ])
+        
+        new_row=[]
+        if store:
+            new_row.append(store)
+        for key in data_keys:
+            if key=='date':
+                parsed_date = None
+                try:
+                    parsed_date = datetime.strptime(raw_date, "%m/%d/%Y %H:%M")
+                except Exception:
+                    pass
+                new_row.append(parsed_date)
+                continue
+            new_row.append(order.get(key, ''))
+        new_rows.append(new_row)
+        # new_rows.append([
+        #     store if store is not None else order.get('store', ''),
+        #     order.get('order_id', ''),
+        #     parsed_date,
+        #     order.get('buyer', ''),
+        #     order.get('product', ''),
+        #     order.get('specs', ''),
+        #     order.get('sku', ''),
+        #     order.get('price', ''),
+        #     order.get('qty', ''),
+        #     order.get('amount', ''),
+        #     order.get('status', ''),
+        #     order.get('status_en', ''),
+        #     order.get('ae_ioss', ''),
+        #     order.get('semi_managed', ''),
+        #     order.get('action', ''),
+        #     order.get('recipient', ''),
+        #     order.get('address', ''),
+        #     order.get('postal_code', ''),
+        #     order.get('email', ''),
+        #     order.get('phone', ''),
+        #     order.get('tax_number', ''),
+        #     order.get('order_link', ''),
+        # ])
 
     # ── 新订单在前，旧订单在后 ─────────────────────────────
     all_rows = new_rows + old_rows
@@ -98,7 +121,7 @@ def save_orders_to_xlsx(new_orders, store):
     header_fill = PatternFill("solid", start_color="4472C4")
     header_font = Font(bold=True, color="FFFFFF")
 
-    for col, header in enumerate(headers, 1):
+    for col, header in enumerate(excel_headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.fill = header_fill
         cell.font = header_font
@@ -112,7 +135,7 @@ def save_orders_to_xlsx(new_orders, store):
 
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
 
-            if col_idx == 3 and isinstance(value, datetime):
+            if isinstance(value, datetime):
                 cell.number_format = "YYYY-MM-DD HH:MM:SS"
 
         link_val = row[-1]
@@ -126,8 +149,9 @@ def save_orders_to_xlsx(new_orders, store):
 
     wb.save(filepath)
 
-    print(f"OK 已保存 {len(all_rows)} 条订单 -> {filepath}")
+    print(f"OK 已保存 {len(all_rows)} 条数据 -> {filepath}")
 
     wb.close()
 
     return filepath, filename
+

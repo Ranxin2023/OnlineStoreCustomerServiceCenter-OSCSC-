@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from helper_functions.utils import translate_status
 from helper_functions.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, profile_map
 from helper_functions.load_latest_files import LatestFetch
+from helper_functions.contry_functions import get_country_from_order
 import time
 
 load_dotenv()
@@ -29,7 +30,8 @@ class WebScrapyModel:
             ("amount_el","div.amount--amount--YdsJokJ", False),
             ("status_el","div.chc-state-label__stateText", False),
             ("tag_el","span.chc-color-tag", True),
-            ("btns","button.next-btn span.next-btn-helper", True)
+            ("btns","button.next-btn span.next-btn-helper", True),
+            ("note_el","span.orderBasic--value--lMC4G8D", False)
         ]
 
     # ─────────────────────────────────────────────────────
@@ -215,6 +217,12 @@ class WebScrapyModel:
                     order['action'] = ", ".join(btn_texts)
                 except Exception:
                     order['action'] = ""
+                # 备注
+                try:
+                    note_el = ["note_el"]
+                    order["remark"] = note_el.text.strip()
+                except:
+                    order["remark"] = ""
 
                 # 详情字段先占位
                 order['recipient']   = ""
@@ -386,12 +394,15 @@ class WebScrapyModel:
             # 🚫 半托管订单跳过
             if order.get("semi_managed") == "yes":
                 print(f"  ⏭ 半托管订单跳过详情: {order.get('order_id')}")
+                order["country"]=""
                 continue
             if order.get("order_link"):
                 print(f"  -> 抓详情 {order['order_id']}")
                 detail_data = self.extract_order_detail(order["order_link"])
                 order.update(detail_data)
-
+            country = get_country_from_order(order)
+            order["country"] = country
+            print(f"  🌍 Country detected: {country}")
         # 不调用 driver.quit()，Chrome 是用户自己的，不能关
         return all_orders
     
