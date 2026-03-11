@@ -97,7 +97,7 @@ def scrape_web_page():
         "Email", "Phone","Country","Tax Number", "Remark", "Order Link"
     ]
     keys=[
-        "order_id", "date", "buyer","product", "specs", 
+        "store", "order_id", "date", "buyer","product", "specs", 
         "sku", "price", "qty", "amount","status", "status_en", 
         "ae_ioss", "semi_managed", "action","recipient", "address", "postal_code", 
         "email", "phone","country","tax_number", "remark", "order_link" 
@@ -106,7 +106,7 @@ def scrape_web_page():
                   15,12,6,12,16,20,
                   8,14,20,20,50,12,
                   25,15, 15,15,15, 75]
-    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, store=store, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
+    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
     print(f"File saved: {xlsx_path}")
 
     return send_file(

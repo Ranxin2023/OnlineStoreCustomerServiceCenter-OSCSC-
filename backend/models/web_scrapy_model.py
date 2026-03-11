@@ -78,7 +78,7 @@ class WebScrapyModel:
     # 列表页解析（第一阶段）+ 详情页抓取（第二阶段）
     # ─────────────────────────────────────────────────────
 
-    def parse_orders_from_page(self):
+    def parse_orders_from_page(self,store):
         """
         first stage — 只解析列表数据，不进详情页
         """
@@ -99,6 +99,7 @@ class WebScrapyModel:
         for table in tables:
             order_el={}
             order = {}
+            order['store']=store
             # find all the tags
             try:
                 for tag, tag_id, is_multi in self.tag_list:
@@ -221,7 +222,7 @@ class WebScrapyModel:
                 try:
                     note_el = ["note_el"]
                     order["remark"] = note_el.text.strip()
-                except:
+                except Exception:
                     order["remark"] = ""
 
                 # 详情字段先占位
@@ -254,7 +255,8 @@ class WebScrapyModel:
         self.driver.get(order_list_url)
         time.sleep(SWITCHING_TIME)
 
-        
+        channel_id_ = channel_id if channel_id is not None else CHANNEL_ID
+        store = profile_map[channel_id_]
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
             WebDriverWait(self.driver, LOADING_TIME).until(
@@ -265,8 +267,7 @@ class WebScrapyModel:
             print("WARN 等待订单列表超时，尝试继续...")
 
         try:
-            channel_id_ = channel_id if channel_id is not None else CHANNEL_ID
-            store = profile_map[channel_id_]
+            
 
             latest_fetch = LatestFetch()
             last_time = latest_fetch.get_latest_fetch(store)
@@ -369,7 +370,7 @@ class WebScrapyModel:
         # ── 第一阶段：翻完所有页，只收集列表数据 ──────────────
         while True:
             print(f"\n第 {page} 页（收集列表）...")
-            orders = self.parse_orders_from_page()
+            orders = self.parse_orders_from_page(store=store)
             all_orders.extend(orders)
             print(f"  累计 {len(all_orders)} 条")
 

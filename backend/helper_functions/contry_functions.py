@@ -10,6 +10,7 @@ def get_country_from_address(address: str):
             return country
 
     return None
+    
 def get_country(order):
 
     phone = order.get("phone", "")

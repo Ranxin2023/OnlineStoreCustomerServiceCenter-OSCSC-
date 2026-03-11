@@ -11,33 +11,9 @@ load_dotenv()
 # ─────────────────────────────────────────────────────
 # 保存 Excel
 # ─────────────────────────────────────────────────────
-def save_sa_orders(orders):
 
-    from openpyxl import Workbook
 
-    wb = Workbook()
-    ws = wb.active
-
-    headers = [
-        "Order ID","Buyer","Address","Phone"
-    ]
-
-    ws.append(headers)
-
-    for o in orders:
-        ws.append([
-            o["order_id"],
-            o["buyer"],
-            o["address"],
-            o["phone"]
-        ])
-
-    filepath = "downloads/SA_orders.xlsx"
-    wb.save(filepath)
-
-    return filepath
-
-def save_orders_to_xlsx(data, store, filename, data_keys,excel_headers, col_widths):
+def save_orders_to_xlsx(data, filename, data_keys,excel_headers, col_widths):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")
@@ -72,8 +48,7 @@ def save_orders_to_xlsx(data, store, filename, data_keys,excel_headers, col_widt
 
         
         new_row=[]
-        if store:
-            new_row.append(store)
+        
         for key in data_keys:
             if key=='date':
                 parsed_date = None
@@ -85,31 +60,7 @@ def save_orders_to_xlsx(data, store, filename, data_keys,excel_headers, col_widt
                 continue
             new_row.append(order.get(key, ''))
         new_rows.append(new_row)
-        # new_rows.append([
-        #     store if store is not None else order.get('store', ''),
-        #     order.get('order_id', ''),
-        #     parsed_date,
-        #     order.get('buyer', ''),
-        #     order.get('product', ''),
-        #     order.get('specs', ''),
-        #     order.get('sku', ''),
-        #     order.get('price', ''),
-        #     order.get('qty', ''),
-        #     order.get('amount', ''),
-        #     order.get('status', ''),
-        #     order.get('status_en', ''),
-        #     order.get('ae_ioss', ''),
-        #     order.get('semi_managed', ''),
-        #     order.get('action', ''),
-        #     order.get('recipient', ''),
-        #     order.get('address', ''),
-        #     order.get('postal_code', ''),
-        #     order.get('email', ''),
-        #     order.get('phone', ''),
-        #     order.get('tax_number', ''),
-        #     order.get('order_link', ''),
-        # ])
-
+      
     # ── 新订单在前，旧订单在后 ─────────────────────────────
     all_rows = new_rows + old_rows
 
