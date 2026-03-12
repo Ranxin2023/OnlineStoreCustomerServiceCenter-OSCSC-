@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask import send_file
 from helper_functions.save_excel import save_orders_to_xlsx
+from helper_functions.utils import parse_address, translate_text
 from helper_functions.constant_values import FILL_COUNTRY_HEADERS
 import os
 import sqlite3
@@ -8,6 +9,8 @@ import sqlite3
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 db_path = os.path.join(base_dir, "database", "orders.db")
 order_bp = Blueprint("orders", __name__)
+
+
 def get_all_orders():
     conn=None
     try:
@@ -31,27 +34,6 @@ def get_all_orders():
         if conn:
             conn.close()
 
-def parse_address(address):
-    """
-    从地址解析 city 和 province/state
-    """
-    if not address:
-        return "", ""
-
-    parts = [p.strip() for p in address.split(",")]
-
-    city = ""
-    province = ""
-
-    if len(parts) >= 4:
-        city = parts[-4]
-        province = parts[-3]
-
-    elif len(parts) == 3:
-        city = parts[-3]
-        province = parts[-2]
-
-    return province, city
 
 @order_bp.route("/api/orders/export", methods=["GET"])
 def export_orders():
@@ -122,8 +104,6 @@ def download_sa_orders():
                 
             elif fill_option=='fixed':
                 row[key]=value
-            elif key in order:
-                row[key]=order.get(key)
             elif key=='row_number':
                 
                 order_date = order.get("date")
@@ -139,11 +119,22 @@ def download_sa_orders():
                     date_counter[date_str] += 1
             
                 row[key] = f"{date_str}{date_counter[date_str]:03d}"
-            elif key == "recipient_province_state":
-                row[key] = province
+            elif key == "address":
+                address = order.get("address", "")
+                row[key] = translate_text(address)    
 
+            elif key == "recipient_province_state":
+                
+                row[key] = translate_text(province)
+                
             elif key == "recipient_city":
-                row[key] = city
+                row[key] =  translate_text(city)
+           
+            elif key == "recipient":
+                name = order.get("recipient", "")
+                row[key] = translate_text(name)    
+            elif key in order:
+                row[key]=order.get(key)
         sa_orders.append(row)
             
 
