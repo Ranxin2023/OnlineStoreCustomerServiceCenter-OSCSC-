@@ -232,6 +232,7 @@ class WebScrapyModel:
                 order['email']       = ""
                 order['phone']       = ""
                 order['tax_number']  = ""
+                order['short_address']  = ""
 
                 all_orders.append(order)
 
@@ -521,6 +522,10 @@ class WebScrapyModel:
                         result['phone'] = value
                     elif "Tax" in label:
                         result['tax_number'] = value
+                    elif "National address（仅沙特使用）" in label:
+                        print(f"National address is {value}")
+                        result['short_address'] = value
+
                 except Exception:
                     continue
 

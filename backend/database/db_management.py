@@ -37,6 +37,7 @@ def init_db():
         email TEXT,
         phone TEXT,
         tax_number TEXT
+        short_address TEXT
     )
     """)
 
