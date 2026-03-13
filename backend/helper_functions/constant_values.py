@@ -122,3 +122,9 @@ FILL_COUNTRY_HEADERS=[
     ("blank","商品链接5","product_link_5",""),
     ("blank","SKU5","sku5", ""),
 ]
+
+SAFE_USERS = [
+    "ae800292"
+]
+
+driver_pool = {}

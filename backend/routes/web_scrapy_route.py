@@ -14,27 +14,24 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
 from dotenv import load_dotenv
 from flask import Blueprint, request, jsonify, send_file
 from models.web_scrapy_model import WebScrapyModel
-from helper_functions.save_excel import  save_orders_to_xlsx
+from helper_functions.constant_values import driver_pool, profile_map
 from helper_functions.driver import get_driver
-from helper_functions.constant_values import profile_map
+from helper_functions.save_excel import  save_orders_to_xlsx
 from helper_functions.load_latest_files import LatestFetch
 from database.order_repository import save_orders_to_db
-import os
 import re
 
 load_dotenv()
 
 web_scrapy_bp = Blueprint("web_scrapy", __name__)
-# ── constant variables ──────────────────────────────────────────────
 
-CHROME_PATH      = os.getenv("CHROME_PATH")
-DEBUG_PORT       = os.getenv("DEBUG_PORT")
+
 
 # ── setup driver ──────────────────────────────────────────────
 
 web_scrapy_model=WebScrapyModel()
 
-driver_pool = {}
+
 
 # ─────────────────────────────────────────────────────
 # Flask 路由

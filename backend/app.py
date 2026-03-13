@@ -8,12 +8,13 @@ from sockets.socket_bp import init_socket
 
 from routes.web_scrapy_route import web_scrapy_bp
 from routes.order_route import order_bp
-
+from routes.chat_route import chat_bp
 def create_app():
     app = Flask(__name__, static_folder="dist", static_url_path="")
     CORS(app)
     app.register_blueprint(web_scrapy_bp)
     app.register_blueprint(order_bp)
+    app.register_blueprint(chat_bp)
     init_socket(app=app)
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
