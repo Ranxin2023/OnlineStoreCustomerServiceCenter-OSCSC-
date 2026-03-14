@@ -18,8 +18,9 @@ interface DetailResult {
   clicked_by: string | null;
   debug_elements: any[];
 }
+
 type Store = "store1" | "store2" | "store3";
-const STORE_URLS = {
+const STORE_URLS: Record<Store, string>= {
   store1: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=98158",
   store2: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1471480",
   store3: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196",
@@ -36,42 +37,37 @@ function App() {
   // ── 订单列表爬取 ──────────────────────────────────
   // const helloMessage="Hello!"
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
-  const [loading1, setLoading1] = useState(false);
-  const [loading2, setLoading2] = useState(false);
-  const [loading3, setLoading3] = useState(false);
+  const [scrapeLoading1, setScrapeLoading1] = useState<boolean>(false);
+  const [scrapeLoading2, setScrapeLoading2] = useState<boolean>(false);
+  const [scrapeLoading3, setScrapeLoading3] = useState<boolean>(false);
+  const [loading1, setLoading1] = useState<boolean>(false);
+  const [loading2, setLoading2] = useState<boolean>(false);
+  const [loading3, setLoading3] = useState<boolean>(false);
   const [scrapyError1, setScrapyError1] = useState<string | null>(null);
   const [scrapyError2, setScrapyError2] = useState<string | null>(null);
   const [scrapyError3, setScrapyError3] = useState<string | null>(null);
-  const [message, setMessage] = useState<string>("Hello");
+  const [message, setMessage] = useState<string>("Hello! Welcome to Huatong Signal Booster Store. How can I help you today? ");
   const [messageError1, setMessageError1] = useState<string | null>(null);
   const [messageError2, setMessageError2] = useState<string | null>(null);
   const [messageError3, setMessageError3] = useState<string | null>(null);
 
-  // ── 订单详情爬取 ──────────────────────────────────
+  // ─————————─ 订单详情爬取 ──────────────────────────────────
   const [detailUrl, setDetailUrl] = useState("");
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
   
-  // ── 日志获取 ──────────────────────────────────
+  // ─————————─ 日志获取 ──────────────────────────────────
   const [logs, setLogs] = useState<string[]>([]);
   const addLog = (msg: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
-  // console.log(`Socket url is:${import.meta.env.VITE_LOCALHOST_API_URL}`)
-  // console.log(`Public url is:${import.meta.env.VITE_API_URL}`)
+  // ─————————─ socket建立 ──────────────────────────────────
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket connected");
       addLog("Socket connected");
     });
-
-    // socket.on("scrape_log", (data: { msg: string }) => {
-    //   setLogs(prev => [
-    //     ...prev,
-    //     `[${new Date().toLocaleTimeString()}] ${data.msg}`
-    //   ]);
-    // });
     socket.on("scrape_log", (data) => {
       console.log("SCRAPE LOG:", data);
       addLog(data.msg);
@@ -80,6 +76,7 @@ function App() {
       socket.off("scrape_log");
     };
   }, []);
+
   // ————————── 处理driver建立 ──────────────────────────────
   
   const handleSetupDriver = async (store: Store) => {
@@ -142,23 +139,26 @@ function App() {
       setLoading(false);
     }
   }
+
   // ──—————————— 处理订单爬取一店 ──────────────────────────────
   const handleScrapeStore1 = async () => {
     addLog("Start scraping Store1");
     const url=STORE_URLS.store1
-    handleScrape(url, setScrapyError1, setLoading1)
+    handleScrape(url, setScrapyError1, setScrapeLoading1)
     addLog("Finished scraping Store1");
   };
+
   // ──—————————— 处理订单爬取二店 ──────────────────────────────
   const handleScrapeStore2 = async () => {
     const url=STORE_URLS.store2
-    handleScrape(url, setScrapyError2, setLoading2)
+    handleScrape(url, setScrapyError2, setScrapeLoading2)
     
   };
+
   // ──—————————— 处理订单爬取三店 ──────────────────────────────
   const handleScrapeStore3 = async () => {
     const url=STORE_URLS.store3
-    handleScrape(url, setScrapyError3, setLoading3)
+    handleScrape(url, setScrapyError3, setScrapeLoading3)
   };
 
   // ──—————————— 处理订单详情爬取 ──────────────────────────────
@@ -186,7 +186,7 @@ function App() {
     }
   };
 
-  // ──—————————— 处理所有订单爬取 ──────────────────────────────
+  // ──—————————— 处理所有订单Export ──────────────────────────────
   
   const handleExportOrders = async () => {
     try {
@@ -383,9 +383,9 @@ function App() {
           <button
             className="sidebar-btn"
             onClick={handleScrapeStore1}
-            disabled={loading1}
+            disabled={scrapeLoading1}
             >
-            {loading1 ? "Scraping..." : "🔍 Scrape Store1"}
+            {scrapeLoading1 ? "Scraping..." : "🔍 Scrape Store1"}
           </button>
           {scrapyError1 && <p className="error-text">{scrapyError1}</p>}
         </div>
@@ -402,9 +402,9 @@ function App() {
           <button
             className="sidebar-btn"
             onClick={handleScrapeStore2}
-            disabled={loading2}
+            disabled={scrapeLoading2}
             >
-            {loading2 ? "Scraping..." : "🔍 Scrape Store2"}
+            {scrapeLoading2 ? "Scraping..." : "🔍 Scrape Store2"}
           </button>
           {scrapyError2 && <p className="error-text">{scrapyError2}</p>}
         </div>
@@ -457,7 +457,7 @@ function App() {
         )}
         <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
 
-        {/* ── chat page部分 ── */}
+        {/* ──—————— chat page部分 ————————── */}
         <h3>Open Chat Page</h3>
          <input
           className="sidebar-input"
@@ -465,33 +465,41 @@ function App() {
           placeholder="Order list URL"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-        />
-        <button
-          className="sidebar-btn"
-          onClick={handleOpenChat1}
-          disabled={loading1}
-          >
-          {loading1?"💬Open Chatting": "💬 Open Chat Page Store1"}
-        </button>
+          />
+        <div className="store-grid">
+
+          <button
+            className="sidebar-btn"
+            onClick={handleOpenChat1}
+            disabled={loading1}
+            >
+            {loading1?"💬Open Chatting": "💬 Open Chat Page Store1"}
+          </button>
+        </div>
         {messageError1 && <p className="error-text">{messageError1}</p>}
-        <button
-          className="sidebar-btn"
-          onClick={handleOpenChat2}
-          disabled={loading2}
-          >
-          
-            {loading2?"💬Open Chatting": "💬 Open Chat Page Store2"}
-        </button>
-        {messageError2 && <p className="error-text">{messageError2}</p>}
-        <button
-          className="sidebar-btn"
-          onClick={handleOpenChat3}
-          disabled={loading3}
-          >
-            {loading3?"💬Open Chatting": "💬 Open Chat Page Store3"}
-          
-        </button>
-        {messageError3 && <p className="error-text">{messageError3}</p>}
+        <div className="store-grid">
+          <button
+            className="sidebar-btn"
+            onClick={handleOpenChat2}
+            disabled={loading2}
+            >
+            
+              {loading2?"💬Open Chatting": "💬 Open Chat Page Store2"}
+          </button>
+          {messageError2 && <p className="error-text">{messageError2}</p>}
+        </div>
+        <div className="store-grid">
+
+          <button
+            className="sidebar-btn"
+            onClick={handleOpenChat3}
+            disabled={scrapeLoading3}
+            >
+              {scrapeLoading3?"💬Open Chatting": "💬 Open Chat Page Store3"}
+            
+          </button>
+          {messageError3 && <p className="error-text">{messageError3}</p>}
+        </div>
         {/* 详情结果展示 */}
         {detailResult && (
           <div className="detail-result-box">

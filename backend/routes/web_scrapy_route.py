@@ -12,13 +12,13 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
 """
 
 from dotenv import load_dotenv
+from database.order_repository import save_orders_to_db
 from flask import Blueprint, request, jsonify, send_file
 from models.web_scrapy_model import WebScrapyModel
-from helper_functions.constant_values import driver_pool, profile_map
-from helper_functions.driver import get_driver
-from helper_functions.save_excel import  save_orders_to_xlsx
-from helper_functions.load_latest_files import LatestFetch
-from database.order_repository import save_orders_to_db
+from models.driver import Driver
+from models.load_latest_files import LatestFetch
+from utils.constant_values import driver_pool, PROFILE_MAP
+from utils.save_excel import  save_orders_to_xlsx
 import re
 
 load_dotenv()
@@ -27,10 +27,10 @@ web_scrapy_bp = Blueprint("web_scrapy", __name__)
 
 
 
-# ── setup driver ──────────────────────────────────────────────
+# ──—————— model Definition ─────────────────────────────────
 
 web_scrapy_model=WebScrapyModel()
-
+driver_model=Driver()
 
 
 # ─────────────────────────────────────────────────────
@@ -46,10 +46,13 @@ def scrape_web_page():
 
     data      = request.get_json()
     url       = data.get("url")
+
     # No URL is given 
     if not url:
         return jsonify({"error": "URL is required"}), 400
     channel_id = None
+    
+    # parse the channel id
     m = re.search(r"channelId=(\d+)", url)
     if m:
         channel_id = m.group(1)
@@ -57,7 +60,7 @@ def scrape_web_page():
 
     print(f"Start scraping: {url}, max_pages: {max_pages or 'ALL'}")
 
-    driver = get_driver(channel_id, driver_pool=driver_pool)
+    driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
     web_scrapy_model.driver=driver
     all_orders=None
     try:
@@ -76,23 +79,25 @@ def scrape_web_page():
     
     if not all_orders:
         return jsonify({"error": "No orders scraped"}), 400
-    store=profile_map.get(channel_id, "unknown")
+    store = PROFILE_MAP.get(channel_id, "unknown")
     
     # 2️. 保存数据库
     new_orders =save_orders_to_db(all_orders, store)
 
     # 3. 更新最新时间
-    latest_fetch=LatestFetch()
+    latest_fetch = LatestFetch()
     latest_fetch.update_latest_fetch(store)
     
     # 4.  保存Excel
     filename = f"order_list_{store}.xlsx"
+    
     headers = [
         "Store", "Order ID", "Date", "Buyer","Product", "Specs", 
         "SKU", "Price", "Qty", "Amount","Status (中文)", "Status (EN)", 
         "AE/IOSS", "Semi-Managed", "Action","Recipient", "Address", "National Address", "Postal Code", 
         "Email", "Phone","Country","Tax Number", "Remark", "Order Link"
     ]
+
     keys=[
         "store", "order_id", "date", "buyer","product", "specs", 
         "sku", "price", "qty", "amount","status", "status_en", 
@@ -104,7 +109,7 @@ def scrape_web_page():
                   8,14,20,20,50,12,
                   25,15, 15,15,15, 75]
     xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
-    print(f"File saved: {xlsx_path}")
+    print(f"File saved to the path: {xlsx_path}")
 
     return send_file(
         xlsx_path,
@@ -118,9 +123,9 @@ def setup_driver_route():
 
     data = request.get_json()
     channel_id = data.get("channelId")
-    print(f"chanel id is{channel_id}")
+    # print(f"chanel id is{channel_id}")
     try:
-        get_driver(channel_id, driver_pool)
+        driver_model.get_driver(channel_id, driver_pool)
 
         return jsonify({
             "message": f"Driver for channel {channel_id} initialized"

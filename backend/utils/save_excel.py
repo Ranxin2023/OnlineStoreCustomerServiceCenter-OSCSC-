@@ -3,9 +3,8 @@ from dotenv import load_dotenv
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
+from typing import List, Dict
 import os
-# import time
-
 
 load_dotenv()
 # ─────────────────────────────────────────────────────
@@ -13,7 +12,7 @@ load_dotenv()
 # ─────────────────────────────────────────────────────
 
 
-def save_orders_to_xlsx(data, filename, data_keys,excel_headers, col_widths):
+def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[str],excel_headers:List[str], col_widths:List[int]):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")

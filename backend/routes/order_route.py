@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify
 from flask import send_file
-from helper_functions.save_excel import save_orders_to_xlsx
-from helper_functions.utils import parse_address, translate_text
-from helper_functions.constant_values import FILL_COUNTRY_HEADERS
+from utils.save_excel import save_orders_to_xlsx
+from utils.contry_functions import parse_address
+from utils.translator_functions import translate_text
+from constants.SA_headers import FILL_SA_HEADERS
 import os
 import sqlite3
 
@@ -92,13 +93,17 @@ def download_sa_orders():
     column_widths=[2 for _ in range(79)]
     keys=[]
     excel_headers=[]
-    for fill_option, column, key, value in FILL_COUNTRY_HEADERS:
+    
+    # add keys and excel headers
+    for fill_option, column, key, value in FILL_SA_HEADERS:
         keys.append(key)
         excel_headers.append(column)
+        
+    # Write SA orders
     for order in rows:
         row={}
         province, city = parse_address(order.get("address"))
-        for fill_option, column, key, value in FILL_COUNTRY_HEADERS:
+        for fill_option, column, key, value in FILL_SA_HEADERS:
             if fill_option=='blank':
                 row[key]=""
                 

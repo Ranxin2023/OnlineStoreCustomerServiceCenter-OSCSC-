@@ -1,19 +1,19 @@
 from datetime import datetime
 from dotenv import load_dotenv
+from models.load_latest_files import LatestFetch
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from helper_functions.utils import translate_status
-from helper_functions.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, profile_map
-from helper_functions.load_latest_files import LatestFetch
-from helper_functions.contry_functions import get_country_from_order
+from utils.translator_functions import translate_status
+from utils.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, PROFILE_MAP
+from utils.contry_functions import get_country_from_order
 import time
 
 load_dotenv()
 
 CHANNEL_ID = "1579616"
-# PAGE_DELAY = 2    # 翻页等待秒数
+
 
 class WebScrapyModel:
     def __init__(self):
@@ -257,7 +257,7 @@ class WebScrapyModel:
         time.sleep(SWITCHING_TIME)
 
         channel_id_ = channel_id if channel_id is not None else CHANNEL_ID
-        store = profile_map[channel_id_]
+        store = PROFILE_MAP[channel_id_]
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
             WebDriverWait(self.driver, LOADING_TIME).until(
@@ -407,7 +407,8 @@ class WebScrapyModel:
             print(f"  🌍 Country detected: {country}")
         # 不调用 driver.quit()，Chrome 是用户自己的，不能关
         return all_orders
-    
+
+    # ──———————— 抓所有详情页（不再需要回列表页）──────
     def extract_order_detail(self, order_link):
         """进入详情页，点击完整收货地址眼睛，提取收货信息"""
         result = {
@@ -424,7 +425,7 @@ class WebScrapyModel:
 
             # 等待地址区域加载
             try:
-                WebDriverWait(self.driver, 5).until(
+                WebDriverWait(self.driver, LOADING_TIME).until(
                     EC.presence_of_element_located(
                         (By.CSS_SELECTOR, self.address_tag_id)
                     )
@@ -469,7 +470,6 @@ class WebScrapyModel:
                     target = eye_els[-1]
                 if target:
                     self.driver.execute_script("arguments[0].click();", target)
-                    # clicked_by = "i[class*='orderEye--eye'][data-spm=i3]"
                     print("     OK 点击收货地址眼睛")
                     time.sleep(1)
                 else:
@@ -527,9 +527,9 @@ class WebScrapyModel:
                         result['short_address'] = value
 
                 except Exception:
-                    continue
+                    print("[extract_order_detail]无法找到详情页地址信息。。。。。。")
 
         except Exception as e:
-            print(f"  [详情页错误] {e}")
+            print(f"  [extract_order_detail] 详情页错误信息：{e}")
 
         return result

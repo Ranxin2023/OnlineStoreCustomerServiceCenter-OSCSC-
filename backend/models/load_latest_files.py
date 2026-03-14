@@ -32,10 +32,7 @@ class LatestFetch:
 
     def get_latest_fetch(self,store):
         
-        # print(f"[get_latest_fetch]Base Dir is{self.hclaw_dir}")
         
-        # print(f"[get_latest_fetch] file path is {self.file_path}")
-        # print(f"[get_latest_fetch] Store is {store}")
         if not os.path.exists(self.file_path):
             return None
 
