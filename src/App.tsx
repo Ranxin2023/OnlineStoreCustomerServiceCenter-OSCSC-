@@ -76,7 +76,7 @@ function App() {
       socket.off("scrape_log");
     };
   }, []);
-
+ 
   // ————————── 处理driver建立 ──────────────────────────────
   
   const handleSetupDriver = async (store: Store) => {
@@ -254,11 +254,12 @@ function App() {
     setError: React.Dispatch<React.SetStateAction<string | null>>,
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
   ) => {
-    
+
     addLog(`Opening chat window for channel ${channelId}`)
     setLoading(true)
+
     try {
-      
+
       const response = await fetch(
         `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/open`,
         {
@@ -269,26 +270,43 @@ function App() {
           body: JSON.stringify({
             url: url,
             channelId: channelId,
-            message:message
+            message: message
           })
         }
       )
-      
+
       if (!response.ok) {
         throw new Error("Failed to open chat")
       }
-      
+
       addLog(`Chat opened for channel ${channelId}`)
-      
+
+      // 启动 listener
+      await fetch(
+        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/start-listener`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            channelId: channelId
+          })
+        }
+      )
+
+      addLog(`Chat listener started`)
+
     } catch (err: any) {
+
       setError(err.message || "Chat open failed")
       addLog(`Chat open failed: ${err.message}`)
-      
-    }
-    finally{
+
+    } finally {
+
       setLoading(false)
+
     }
-    
   }
   // ──———————————————————— 处理客服一店输入 ──────────────────────────────
   const handleOpenChat1 = async () => {

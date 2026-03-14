@@ -32,7 +32,6 @@ class LatestFetch:
 
     def get_latest_fetch(self,store):
         
-        
         if not os.path.exists(self.file_path):
             return None
 
