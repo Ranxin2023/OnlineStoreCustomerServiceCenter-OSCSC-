@@ -11,13 +11,13 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
   - 如果是第一次使用，需要先手动在弹出的 Chrome 中登录速卖通，再重试
 """
 
+from constants.constant_values import driver_pool, PROFILE_MAP
 from dotenv import load_dotenv
 from database.order_repository import save_orders_to_db
 from flask import Blueprint, request, jsonify, send_file
 from models.web_scrapy_model import WebScrapyModel
 from models.driver import Driver
 from models.load_latest_files import LatestFetch
-from utils.constant_values import driver_pool, PROFILE_MAP
 from utils.save_excel import  save_orders_to_xlsx
 import re
 

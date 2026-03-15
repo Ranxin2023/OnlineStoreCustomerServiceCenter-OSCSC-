@@ -1,0 +1,130 @@
+{
+    "hi": [
+        {"word":"hi", "count":0},
+        {"word":"hello","count":0},
+        {"word":"hey","count":0},
+        {"word":"good morning","count":0},
+        {"word":"good afternoon","count":0},
+        {"word":"good evening","count":0}
+    ],
+
+    "thank_you": [
+        {"word":"thanks","count":0},
+        {"word":"thank","count":0},
+        {"word":"appreciate it", "count":0}
+    ],
+
+    "which_model": [
+        {"word":"model","count":0}
+    ],
+
+    "damage": [
+        {"word":"damaged","count":0},
+        {"word":"broken","count":0},
+        {"word":"cracked","count":0},
+        {"word":"arrived damaged","count":0},
+        {"word":"package damaged", "count":0}
+    ],
+
+    "how_ship": [
+        {"word":"how do you ship","count":0},
+        {"word":"shipping method","count":0}, 
+        {"word":"what shipping","count":0},
+        {"word":"how shipped", "count":0}
+    ],
+
+    "shipping_time": [
+        {"word":"how long shipping","count":0},
+        {"word":"delivery time","count":0}, 
+        {"word":"shipping time","count":0}, 
+        {"word":"when will arrive","count":0}, 
+        {"word":"how many days shipping","count":0}
+    ],
+
+    "tracking": [
+        {"word":"tracking","count":0},
+        {"word":"track order","count":0},
+        {"word":"tracking number","count":0},
+        {"word":"where is my order","count":0},
+        {"word":"where is my parcel","count":0}
+    ],
+
+    "not_work": [
+        {"word":"not working","count":0},
+        {"word":"does not work","count":0},
+        {"word":"stopped working","count":0},
+        {"word":"cannot use","count":0},
+        {"word":"defective","count":0}
+    ],
+
+    "install": [
+        {"word":"how to install","count":0},
+        {"word":"installation","count":0},
+        {"word":"install guide","count":0},
+        {"word":"setup","count":0},
+        {"word":"how to setup","count":0}
+    ],
+
+    "tech_support": [
+        {"word":"technical support","count":0},
+        {"word":"need help","count":0},
+        {"word":"support please","count":0},
+        {"word":"help with product","count":0}
+    ],
+    
+    "return": [
+        {"word":"return item","count":0},
+        {"word":"return product","count":0},
+        {"word":"send back","count":0},
+        {"word":"return order","count":0}
+    ],
+    
+    "refund": [
+        {"word":"refund","count":0},
+        {"word":"money back","count":0},
+        {"word":"return money","count":0},
+        {"word":"get refund","count":0},
+        {"word":"refund please","count":0}
+        
+    ],
+    
+    "cancel_order": [
+        {"word":"cancel order","count":0},
+        {"word":"cancel purchase","count":0},
+        {"word":"stop order","count":0},
+        {"word":"abort order","count":0}
+    ],
+    
+    "wrong_item": [
+        {"word":"wrong item","count":0},
+        {"word":"wrong product","count":0},
+        {"word":"not what i ordered","count":0},
+        {"word":"incorrect item","count":0}
+        
+    ],
+    
+    "missing_parts": [
+        {"word":"missing","count":0}
+    ],
+    
+    "warranty": [
+        {"word":"warranty","count":0},
+        {"word":"guarantee","count":0},
+        {"word":"repair policy","count":0},
+        {"word":"product warranty","count":0}
+    ],
+    
+    "order_status": [
+        {"word":"order status","count":0},
+        {"word":"order update","count":0},
+        {"word":"status of order","count":0},
+        {"word":"check order","count":0}
+    ],
+
+    "human": [
+        {"word":"talk to human","count":0}, 
+        {"word":"customer service","count":0}, 
+        {"word":"agent","count":0}, 
+        {"word":"real person","count":0}
+    ]
+}

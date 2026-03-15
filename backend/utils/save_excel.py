@@ -1,72 +1,18 @@
 from datetime import datetime
-from dotenv import load_dotenv
-from openpyxl import Workbook
+from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from typing import List, Dict
 import os
 
-load_dotenv()
 # ─────────────────────────────────────────────────────
 # 保存 Excel
 # ─────────────────────────────────────────────────────
-
-
-def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[str],excel_headers:List[str], col_widths:List[int]):
-
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")
-    os.makedirs(download_dir, exist_ok=True)
-
+def write_excel(filename: str,filepath:str, excel_headers: List[str], all_rows, col_widths:List[int]):
     
-    filepath = os.path.join(download_dir, filename)
-
-    old_rows = []
-
-    # ── 如果文件存在，读取旧数据 ─────────────────────────────
-    if os.path.exists(filepath):
-
-        from openpyxl import load_workbook
-
-        wb_old = load_workbook(filepath)
-        ws_old = wb_old.active
-
-        for row in ws_old.iter_rows(min_row=2, values_only=True):
-            old_rows.append(list(row))
-
-        wb_old.close()
-
-        print(f"读取旧Excel {len(old_rows)} 条")
-
-    # ── 处理新订单 ─────────────────────────────
-    new_rows = []
-
-    for order in data:
-        # print(f"[save_orders_to_xlsx]Order row is {order}")
-        raw_date = order.get("date", "")
-
-        
-        new_row=[]
-        
-        for key in data_keys:
-            if key=='date':
-                parsed_date = None
-                try:
-                    parsed_date = datetime.strptime(raw_date, "%m/%d/%Y %H:%M")
-                except Exception:
-                    pass
-                new_row.append(parsed_date)
-                continue
-            new_row.append(order.get(key, ''))
-        new_rows.append(new_row)
-      
-    # ── 新订单在前，旧订单在后 ─────────────────────────────
-    all_rows = new_rows + old_rows
-
-    # ── 写 Excel ─────────────────────────────
     wb = Workbook()
     ws = wb.active
-    ws.title = "Orders"
+    ws.title = filename
 
     header_fill = PatternFill("solid", start_color="4472C4")
     header_font = Font(bold=True, color="FFFFFF")
@@ -102,6 +48,58 @@ def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[
     print(f"OK 已保存 {len(all_rows)} 条数据 -> {filepath}")
 
     wb.close()
+    
+def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[str],excel_headers:List[str], col_widths:List[int]):
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")
+    os.makedirs(download_dir, exist_ok=True)
+
+    
+    filepath = os.path.join(download_dir, filename)
+
+    old_rows = []
+
+    # ─————————————─ 如果文件存在，读取旧数据 ─────────────────────────────
+    if os.path.exists(filepath):
+
+        wb_old = load_workbook(filepath)
+        ws_old = wb_old.active
+
+        for row in ws_old.iter_rows(min_row=2, values_only=True):
+            old_rows.append(list(row))
+
+        wb_old.close()
+
+        print(f"读取旧Excel {len(old_rows)} 条")
+
+    # ──—————————— 处理新订单 ─────────────────────────────
+    new_rows: List[List[str]]= []
+
+    for order in data:
+        # print(f"[save_orders_to_xlsx]Order row is {order}")
+        raw_date = order.get("date", "")
+
+        
+        new_row=[]
+        
+        for key in data_keys:
+            if key=='date':
+                parsed_date = None
+                try:
+                    parsed_date = datetime.strptime(raw_date, "%m/%d/%Y %H:%M")
+                except Exception:
+                    pass
+                new_row.append(parsed_date)
+                continue
+            new_row.append(order.get(key, ''))
+        new_rows.append(new_row)
+      
+    # ─————————─ 新订单在前，旧订单在后 ─────────────────────────────
+    all_rows = new_rows + old_rows
+    
+    # ──———————— 写 Excel ─────────────────────────────
+    write_excel(filename=filename, filepath=filepath, excel_headers=excel_headers, all_rows=all_rows, col_widths=col_widths)
 
     return filepath, filename
 

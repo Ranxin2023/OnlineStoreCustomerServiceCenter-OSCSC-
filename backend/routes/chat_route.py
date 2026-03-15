@@ -1,13 +1,14 @@
 
+from constants.constant_values import SAFE_USERS, driver_pool
 from flask import Blueprint, jsonify, request
+from models.driver import Driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from sockets.socket_bp import socketio
-from utils.constant_values import SAFE_USERS, driver_pool
-from utils.listening_chat import listen_chat
-from models.driver import Driver
 import threading
+from utils.listening_chat import listen_chat
+
 chat_bp = Blueprint("chat", __name__)
 
 # ----------------model definition------------------
@@ -187,6 +188,7 @@ def open_chat():
     # except Exception as e:
     #     print(f"Error in sending messages {e}")
     #     return jsonify({"error": str(e)}), 500
+
     return jsonify({
         "status": "message typed",
         "user": target_name,

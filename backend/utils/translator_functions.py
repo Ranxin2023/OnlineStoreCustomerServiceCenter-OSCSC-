@@ -1,5 +1,5 @@
 # import socket
-from utils.constant_values import STATUS_TRANSLATION
+from constants.constant_values import STATUS_TRANSLATION
 from deep_translator import GoogleTranslator
 
 translator = GoogleTranslator(source="auto", target="en")
@@ -13,6 +13,9 @@ def translate_status(status):
     
     return STATUS_TRANSLATION.get(status, status)
 
+# ─────────────────────────────────────────────────────
+# 文字翻译
+# ─────────────────────────────────────────────────────
 
 def translate_text(text):
     if not text:

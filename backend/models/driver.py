@@ -1,6 +1,6 @@
 import os
 import socket
-from utils.constant_values import PROFILE_MAP, DEBUG_PORT
+from constants.constant_values import PROFILE_MAP, DEBUG_PORT
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 

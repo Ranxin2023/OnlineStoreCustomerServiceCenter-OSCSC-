@@ -1,5 +1,5 @@
-from constants.country_constants import PHONE_COUNTRY_MAP, ADDRESS_COUNTRY_MAP
-from typing import Dict
+from constants.country_maps import PHONE_COUNTRY_MAP, ADDRESS_COUNTRY_MAP
+from typing import Dict, Tuple
 def get_country_from_address(address: str):
     if not address:
         return None
@@ -58,7 +58,7 @@ def get_country_from_order(order: Dict[str, str]):
         
     return "Unknown"
 
-def parse_address(address:str):
+def parse_address(address:str)->Tuple[str]:
     """
     从地址解析 city 和 province/state
     """

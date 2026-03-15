@@ -1,0 +1,36 @@
+{
+
+    "hi": "Hello! Welcome to Huatong Signal 😊 How can I help you?",
+
+    "thank_you": "You're welcome! Let me know if you need anything else.",
+
+    "which_model": "Could you please tell me which product you are referring to? I will help you check the model.",
+
+    "damage": "We're sorry to hear that the item arrived damaged. Could you please send us a photo so we can assist you?",
+
+    "how_ship": "We usually ship by AliExpress Standard Shipping or Cainiao depending on your location.",
+
+    "shipping_time": "Shipping usually takes about 7-15 days depending on your country.",
+
+    "tracking": "You can check the tracking number in your order page. If you want I can help you check it.",
+
+    "not_work": "Sorry about that. Could you please tell us the problem or send a video so we can help you fix it?",
+
+    "install": "We can provide installation instructions. Please tell us which product you need help installing.",
+
+    "tech_support": "Our technical support team will help you. Please describe the problem in detail.",
+
+    "return": "If the item has a problem we can help you with return or replacement.",
+
+    "refund": "If there is a product issue we can help arrange a refund or replacement.",
+
+    "cancel_order": "If the order has not been shipped yet we can help you cancel it.",
+
+    "wrong_item": "Sorry for the mistake. Please send us a photo of the item you received.",
+
+    "missing_parts": "Sorry for the inconvenience. Please let us know which parts are missing.",
+
+    "warranty": "Our products come with warranty. Please tell us the issue and we will assist you.",
+
+    "human": "Please wait a moment. Our customer service will assist you shortly."
+}

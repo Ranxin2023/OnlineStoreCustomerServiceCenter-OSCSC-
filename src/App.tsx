@@ -34,7 +34,7 @@ const STORE_CHANNEL_ID: Record<Store, string>= {
 };
 
 function App() {
-  // ── 订单列表爬取 ──────────────────────────────────
+  // ─——————————─ 变量定义 ──────────────────────────────────
   // const helloMessage="Hello!"
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
   const [scrapeLoading1, setScrapeLoading1] = useState<boolean>(false);

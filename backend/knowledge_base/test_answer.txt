@@ -1,0 +1,92 @@
+1 Greeting（hi）
+hi
+hello
+hey
+good morning
+good evening
+
+2 Thank you（thank_you）
+thank you
+thanks
+thanks a lot
+appreciate it
+thank you so much
+
+3 Product model（which_model）
+which model is this
+what is the model number
+can you tell me the model
+what version is this product
+which model should I buy
+
+4 Damaged item（damage）
+the item arrived damaged
+my package is broken
+the product is cracked
+it arrived broken
+the box is damaged
+
+5 Return（return）
+I want to return the item
+return item
+can I return this product
+how to return the order
+I want return
+send back item
+
+6 Refund（refund）
+I want refund
+refund please
+money back please
+can you refund me
+I need my money back
+refund my order
+
+9 Installation（install）
+how to install this
+installation guide please
+how do I install it
+how to set up the device
+install instructions
+
+10 Technical support（tech_support）
+I need technical support
+can you help me fix it
+need help with product
+please help me
+support please
+
+11 Return（return）
+I want to return the item
+can I return this product
+how do I return the order
+I want to send it back
+can I send the item back
+
+12 Refund（refund）
+I want a refund
+can I get my money back
+please refund my order
+I need refund
+refund please
+
+14 Wrong item（wrong_item）
+I received the wrong item
+this is not what I ordered
+you sent the wrong product
+incorrect item received
+wrong product delivered
+
+hi I want refund
+hello my item is broken
+hi dear my order not arrive
+hello can I return the item
+good afternoon, the product is not working
+hello where is my order
+hi I need help with installation
+
+what colors do you have
+can you give me discount
+is this product good
+how much price
+do you ship to my country

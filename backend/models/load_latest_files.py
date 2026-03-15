@@ -12,19 +12,19 @@ class LatestFetch:
         
         print(f"[update_latest_fetch]Base Dir is{self.hclaw_dir}")
 
-        # 读取原文件
+        # —————————— 读取原文件 ————————————
         data = {}
 
         if os.path.exists(self.file_path):
             with open(self.file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-        # 更新时间
+        # —————————— 更新时间 ——————————
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         data[store] = now
 
-        # 写回文件
+        # —————————— 写回文件 ——————————
         with open(self.file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
 

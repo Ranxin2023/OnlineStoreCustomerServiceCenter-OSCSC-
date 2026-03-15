@@ -1,0 +1,77 @@
+{
+  "intents": {
+    "hi": {
+      "description": "Customer greeting",
+      "priority": 1
+    },
+    "thank_you": {
+      "description": "Customer thanks the seller",
+      "priority": 1
+    },
+    "which_model": {
+      "description": "Customer asks which model/product version",
+      "priority": 2
+    },
+    "damage": {
+      "description": "Customer reports damaged product",
+      "priority": 5,
+      "human": true
+    },
+    "how_ship": {
+      "description": "Customer asks about shipping method",
+      "priority": 3
+    },
+    "shipping_time": {
+      "description": "Customer asks about delivery time",
+      "priority": 3
+    },
+    "not_work": {
+      "description": "Product not working",
+      "priority": 5,
+      "human": true
+    },
+    "return": {
+      "description": "Customer wants to return item",
+      "priority": 4
+    },
+    "refund": {
+      "description": "Customer wants refund",
+      "priority": 5,
+      "human": true
+    },
+    "install": {
+      "description": "Customer asks how to install product",
+      "priority": 3
+    },
+    "tech_support": {
+      "description": "Technical support request",
+      "priority": 4
+    },
+    "tracking": {
+      "description": "Customer asks where the package is",
+      "priority": 3
+    },
+    "cancel_order": {
+      "description": "Customer wants to cancel order",
+      "priority": 4
+    },
+    "wrong_item": {
+      "description": "Customer received wrong item",
+      "priority": 5,
+      "human": true
+    },
+    "missing_parts": {
+      "description": "Customer reports missing parts",
+      "priority": 4
+    },
+    "warranty": {
+      "description": "Customer asks warranty information",
+      "priority": 3
+    },
+    "human": {
+      "description": "Needs human customer service",
+      "priority": 10,
+      "human": true
+    }
+  }
+}

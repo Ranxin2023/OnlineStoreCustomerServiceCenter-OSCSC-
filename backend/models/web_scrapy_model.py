@@ -1,3 +1,4 @@
+from constants.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, PROFILE_MAP, CHANNEL_ID
 from datetime import datetime
 from dotenv import load_dotenv
 from models.load_latest_files import LatestFetch
@@ -6,14 +7,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.translator_functions import translate_status
-from utils.constant_values import LOADING_TIME, BASE_URL, SWITCHING_TIME, PROFILE_MAP
 from utils.contry_functions import get_country_from_order
 import time
 
 load_dotenv()
-
-CHANNEL_ID = "1579616"
-
 
 class WebScrapyModel:
     def __init__(self):
@@ -74,6 +71,7 @@ class WebScrapyModel:
         except Exception as e:
             print(f"  [翻页] 未找到下一页按钮，停止: {e}")
             return False
+        
     # ─────────────────────────────────────────────────────
     # 列表页解析（第一阶段）+ 详情页抓取（第二阶段）
     # ─────────────────────────────────────────────────────
@@ -114,9 +112,9 @@ class WebScrapyModel:
                 print(f"  [跳过] 解析订单出错: {e}")
                 continue
                     
+            
+            # 订单号 + 构造详情链接
             try:
-                # 订单号 + 构造详情链接
-                try:
                     order_id_el=order_el["order_id_el"]
                     order_id = order_id_el.text.strip()
                     order['order_id'] = order_id
@@ -126,119 +124,117 @@ class WebScrapyModel:
                         f"orderDetail?orderId={order_id}&channelId={cid}"
                     )
                     # print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
-                except Exception as e:
+            except Exception as e:
                     print(f"  [订单号解析失败] {e}")
                     order['order_id']   = ""
                     order['order_link'] = ""
 
-                # 下单时间
-                try:
+            # 下单时间
+            try:
                     time_els=order_el["time_el"]
                     
                     order['date'] = time_els[0].text.strip() if time_els else ""
                     # print(f"[parse_orders_from_page] Order Date is {order['date']}")
-                except Exception:
+            except Exception:
                     order['date'] = ""
 
-                # 买家
-                try:
+            # 买家
+            try:
                     buyer_el=order_el["buyer_el"]
                     order['buyer'] = buyer_el.text.strip()
-                except Exception:
+            except Exception:
                     order['buyer'] = ""
 
-                # 商品名称
-                try:
+            # 商品名称
+            try:
                     product_el=order_el["product_el"]
                     order['product'] = product_el.text.strip()[:80]
-                except Exception:
+            except Exception:
                     order['product'] = ""
 
-                # 规格 / SKU
-                try:
+            # 规格 / SKU
+            try:
                     sku_els=order_el["sku_el"]
                     order['specs'] = sku_els[0].text.strip() if len(sku_els) > 0 else ""
                     order['sku']   = sku_els[1].text.strip() if len(sku_els) > 1 else ""
-                except Exception:
+            except Exception:
                     order['specs'] = ""
                     order['sku']   = ""
 
-                # 单价
-                try:
-                    price_el = table.find_element(
-                        By.CSS_SELECTOR, "span.productInfo--unitFee--mVPKC9G"
-                    )
+            # 单价
+            try:
+                    price_el = order_el["price_el"]
                     order['price'] = price_el.text.strip()
-                except Exception:
+            except Exception:
                     order['price'] = ""
 
-                # 数量
-                try:
+            # 数量
+            try:
                     qty_el=order_el["qty_el"]
                     order['qty'] = qty_el.text.strip()
-                except Exception:
+            except Exception:
                     order['qty'] = ""
 
-                # 总金额
-                try:
+            # 总金额
+            try:
                     amount_el=order_el["amount_el"]
                     order['amount'] = amount_el.text.strip()
-                except Exception:
+            except Exception:
                     order['amount'] = ""
 
-                # 订单状态
-                try:
-                    status_el=order_el["status_el"]
-                    order['status']    = status_el.text.strip()
-                    order['status_en'] = translate_status(order['status'])
-                except Exception:
-                    order['status']    = ""
-                    order['status_en'] = ""
+            # 订单状态
+            try:
+                status_el=order_el["status_el"]
+                order['status']    = status_el.text.strip()
+                order['status_en'] = translate_status(order['status'])
+            except Exception:
+                order['status']    = ""
+                order['status_en'] = ""
 
-                # AE/IOSS
-                try:
+            # AE/IOSS
+            try:
                     tag_els   = order_el["tag_el"]
                     tag_texts = [el.text for el in tag_els]
                     order['ae_ioss'] = "yes" if "AE/IOSS" in tag_texts else "no"
-                except Exception:
+            except Exception:
                     order['ae_ioss'] = "no"
 
-                # 半托管
-                try:
+            # 半托管
+            try:
                     tag_els   = order_el["tag_el"]
                     tag_texts  = [el.text for el in tag_els]
                     order['semi_managed'] = "yes" if any("半托管" in t for t in tag_texts) else "no"
-                except Exception:
+            except Exception:
                     order['semi_managed'] = "no"
 
-                # 操作按钮
-                try:
-                    btns=order_el["btns"]
-                    btn_texts    = [b.text.strip() for b in btns if b.text.strip()]
-                    order['action'] = ", ".join(btn_texts)
-                except Exception:
+            # 操作按钮
+            try:
+                btns=order_el["btns"]
+                btn_texts    = [b.text.strip() for b in btns if b.text.strip()]
+                order['action'] = ", ".join(btn_texts)
+            except Exception:
                     order['action'] = ""
-                # 备注
-                try:
-                    note_el = ["note_el"]
-                    order["remark"] = note_el.text.strip()
-                except Exception:
+            # 备注
+            try:
+                note_el = ["note_el"]
+                order["remark"] = note_el.text.strip()
+            except Exception:
                     order["remark"] = ""
 
-                # 详情字段先占位
-                order['recipient']   = ""
-                order['address']     = ""
-                order['postal_code'] = ""
-                order['email']       = ""
-                order['phone']       = ""
-                order['tax_number']  = ""
-                order['short_address']  = ""
+            # 详情字段先占位
+            order['recipient']   = ""
+            order['address']     = ""
+            order['postal_code'] = ""
+            order['email']       = ""
+            order['phone']       = ""
+            order['tax_number']  = ""
+            order['short_address']  = ""
 
-                all_orders.append(order)
+            all_orders.append(order)
 
-            except Exception as e:
-                print(f"  [跳过] 解析订单出错: {e}")
-                continue
+            # except Exception as e:
+            #     print(f"  [跳过] 解析订单出错: {e}")
+            #     continue
 
         return all_orders
     
@@ -365,6 +361,7 @@ class WebScrapyModel:
 
         except Exception as e:
             print(f"WARN 等待查询超时，尝试继续: {e}")
+
         all_orders = []
         page = 1
 
@@ -422,21 +419,23 @@ class WebScrapyModel:
 
         try:
             self.driver.get(order_link)
+        except Exception as e:
+            print(f"[extract_order_detail] Error to get the driver{e}")
 
-            # 等待地址区域加载
-            try:
-                WebDriverWait(self.driver, LOADING_TIME).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, self.address_tag_id)
-                    )
+        # 等待地址区域加载
+        try:
+            WebDriverWait(self.driver, LOADING_TIME).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, self.address_tag_id)
                 )
-            except Exception:
+            )
+        except Exception:
                 print("  [详情页] 地址区域加载超时，跳过此订单")
                 return result  # 返回空的 result 字典即可
 
-            # ── 收集地址区域所有元素，返回给前端用于定位按钮 ──
-            debug_elements = []
-            try:
+        # ── 收集地址区域所有元素，返回给前端用于定位按钮 ──
+        debug_elements = []
+        try:
                 container = self.driver.find_element(
                     By.XPATH, "//*[contains(@class,'orderInfo--address')]"
                 )
@@ -449,15 +448,15 @@ class WebScrapyModel:
                         debug_elements.append({
                             "tag": tag, "class": cls, "text": txt, "onclick": onclick
                         })
-            except Exception as e:
+        except Exception as e:
                 debug_elements.append({"error": str(e)})
 
-            # ── 尝试多种方式点击展开按钮 ──
-            # clicked_by = None
-            # 页面有两个眼睛图标：左边是买家名字旁，右边是完整收货地址
-            # 右边收货地址的眼睛 data-spm-anchor-id 包含 "i3"
-            # clicked_by = None
-            try:
+        # ── 尝试多种方式点击展开按钮 ──
+        # clicked_by = None
+        # 页面有两个眼睛图标：左边是买家名字旁，右边是完整收货地址
+        # 右边收货地址的眼睛 data-spm-anchor-id 包含 "i3"
+        # clicked_by = None
+        try:
                 eye_els = self.driver.find_elements(By.CSS_SELECTOR, "i[class*='orderEye--eye']")
                 target = None
                 for el in eye_els:
@@ -474,14 +473,14 @@ class WebScrapyModel:
                     time.sleep(1)
                 else:
                     print("    WARN 未找到眼睛按钮")
-            except Exception as e:
+        except Exception as e:
                 print(f"    WARN 点击眼睛失败: {e}")
 
-            # ── 等收件人脱敏 ──
-            # unmasked = False
-            def recipient_unmasked(d):
-                items = d.find_elements(By.CSS_SELECTOR, self.address_tag_id)
-                for item in items:
+        # ──———————— 等收件人脱敏 ──————————
+        # unmasked = False
+        def recipient_unmasked(d):
+            items = d.find_elements(By.CSS_SELECTOR, self.address_tag_id)
+            for item in items:
                     try:
                         label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
                         if "收件人名称" in label:
@@ -489,47 +488,47 @@ class WebScrapyModel:
                             return "*" not in value and value != ""
                     except Exception:
                         pass
-                return False
+            return False
 
-            try:
+        try:
                 WebDriverWait(self.driver, 5).until(recipient_unmasked)
                 print("    OK 收件人已脱敏")
-            except Exception:
+        except Exception:
                 # 等待超时就兜底等 2 秒再读，避免空结果
                 print("    WARN 等待收件人脱敏超时，延迟2秒后继续")
                 time.sleep(SWITCHING_TIME)
 
 
-            # ── 读取地址字段 ──
-            result = {
+        # ── 读取地址字段 ──
+        result = {
                 'recipient': '', 'address': '', 'postal_code': '',
                 'email': '', 'phone': '', 'tax_number': ''
             }
-            address_items = self.driver.find_elements(By.CSS_SELECTOR, self.address_tag_id)
-            for item in address_items:
-                try:
-                    label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
-                    value = item.find_element(By.CSS_SELECTOR, "span[class*='addressValue']").text.strip()
-                    if "收件人名称" in label:
-                        result['recipient'] = value
-                    elif "详细地址" in label:
-                        result['address'] = value
-                    elif "邮编" in label:
-                        result['postal_code'] = value
-                    elif "联系邮件" in label:
-                        result['email'] = value
-                    elif "联系电话" in label:
-                        result['phone'] = value
-                    elif "Tax" in label:
-                        result['tax_number'] = value
-                    elif "National address（仅沙特使用）" in label:
-                        print(f"National address is {value}")
-                        result['short_address'] = value
+        address_items = self.driver.find_elements(By.CSS_SELECTOR, self.address_tag_id)
+        for item in address_items:
+            try:
+                label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
+                value = item.find_element(By.CSS_SELECTOR, "span[class*='addressValue']").text.strip()
+                if "收件人名称" in label:
+                    result['recipient'] = value
+                elif "详细地址" in label:
+                    result['address'] = value
+                elif "邮编" in label:
+                    result['postal_code'] = value
+                elif "联系邮件" in label:
+                    result['email'] = value
+                elif "联系电话" in label:
+                    result['phone'] = value
+                elif "Tax" in label:
+                    result['tax_number'] = value
+                elif "National address（仅沙特使用）" in label:
+                    print(f"National address is {value}")
+                    result['short_address'] = value
 
-                except Exception:
-                    print("[extract_order_detail]无法找到详情页地址信息。。。。。。")
+            except Exception:
+                print("[extract_order_detail]无法找到详情页地址信息。。。。。。")
 
-        except Exception as e:
-            print(f"  [extract_order_detail] 详情页错误信息：{e}")
+        # except Exception as e:
+        #     print(f"  [extract_order_detail] 详情页错误信息：{e}")
 
         return result

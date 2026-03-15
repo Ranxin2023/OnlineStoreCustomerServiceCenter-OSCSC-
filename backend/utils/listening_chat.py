@@ -1,8 +1,9 @@
-import time
+from constants.constant_values import PAGE_LOADING_TIME, LOADING_TIME,SWITCHING_TIME
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from utils.constant_values import PAGE_LOADING_TIME
+import time
+from utils.handle_intent import generate_reply
 # def listen_chat(driver, socketio, channel_id):
 
 #     last_message = None
@@ -51,6 +52,8 @@ from utils.constant_values import PAGE_LOADING_TIME
 #             print("Listener error:", e)
 
 #         time.sleep(2)
+def remove_non_bmp(text):
+    return ''.join(c for c in text if ord(c) <= 0xFFFF)
 
 def listen_chat(driver, socketio, channel_id):
     print("[listen_chat] waiting for messages to load...")
@@ -82,6 +85,7 @@ def listen_chat(driver, socketio, channel_id):
             break
 
     # print(f"[listen_chat]Last seller is{last_count}")
+
     # round robin
     while True:
 
@@ -112,6 +116,7 @@ def listen_chat(driver, socketio, channel_id):
 
                 print("New message:", text)
 
+
                 socketio.emit(
                     "chat_message",
                     {
@@ -120,33 +125,34 @@ def listen_chat(driver, socketio, channel_id):
                         "message": text
                     }
                 )
-
+                
                 if sender != "buyer":
                     continue
-                
-                reply = f"Auto reply: {text}"
 
+                reply = generate_reply(text)
+                print(f"[listen_chat]Intent is: {reply}")
+                reply = remove_non_bmp(reply)
                 print("Replying:", reply)
 
                 try:
 
                     # 输入框
-                    input_box = WebDriverWait(driver, 20).until(
-                                EC.presence_of_element_located(
-                                    (By.CSS_SELECTOR, "textarea.im-message-input-no-auto-height")
-                                )
-                            )
+                    input_box = WebDriverWait(driver, LOADING_TIME).until(
+                        EC.presence_of_element_located(
+                            (By.CSS_SELECTOR, "textarea.im-message-input-no-auto-height")
+                        )
+                    )
 
                     input_box.click()
                     input_box.clear()
                     input_box.send_keys(reply)
 
                     # 发送按钮
-                    send_btn = WebDriverWait(driver, 20).until(
-                                EC.element_to_be_clickable(
-                                    (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
-                                )
-                            )
+                    send_btn = WebDriverWait(driver, LOADING_TIME).until(
+                        EC.element_to_be_clickable(
+                            (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
+                        )
+                    )
 
                     driver.execute_script(
                         "arguments[0].click();",
@@ -163,4 +169,4 @@ def listen_chat(driver, socketio, channel_id):
         except Exception as e:
             print("Listener error:", e)
 
-        time.sleep(2)
+        time.sleep(SWITCHING_TIME)
