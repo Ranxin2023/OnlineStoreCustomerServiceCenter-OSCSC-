@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-from utils.handle_intent import generate_reply
+from agent.handle_intent import generate_reply
 # def listen_chat(driver, socketio, channel_id):
 
 #     last_message = None
@@ -130,9 +130,9 @@ def listen_chat(driver, socketio, channel_id):
                     continue
 
                 reply = generate_reply(text)
-                print(f"[listen_chat]Intent is: {reply}")
+                # print(f"[listen_chat]Intent is: {reply}")
                 reply = remove_non_bmp(reply)
-                print("Replying:", reply)
+                print("[listen_chat] Replying:", reply)
 
                 try:
 

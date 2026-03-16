@@ -1,36 +1,91 @@
 {
+    "hi": {
+        "intent": "customer greeting like hello hi good morning good evening",
+        "answer": "Hello! Welcome to Huatong Signal 😊 How can I help you?"
+    },
 
-    "hi": "Hello! Welcome to Huatong Signal 😊 How can I help you?",
+    "thank_you": {
+        "intent": "customer says thank you thanks appreciate it",
+        "answer": "You're welcome! Let me know if you need anything else."
+    },
 
-    "thank_you": "You're welcome! Let me know if you need anything else.",
+    "which_model": {
+        "intent": "customer asking which product model or product information",
+        "answer": "Could you please tell me which product you are referring to? I will help you check the model."
+    },
 
-    "which_model": "Could you please tell me which product you are referring to? I will help you check the model.",
+    "damage": {
+        "intent": "customer says item arrived damaged broken defective",
+        "answer": "We're sorry to hear that the item arrived damaged. Could you please send us a photo so we can assist you?"
+    },
 
-    "damage": "We're sorry to hear that the item arrived damaged. Could you please send us a photo so we can assist you?",
+    "how_ship": {
+        "intent": "customer asking shipping method how you ship delivery method",
+        "answer": "We usually ship by AliExpress Standard Shipping or Cainiao depending on your location."
+    },
 
-    "how_ship": "We usually ship by AliExpress Standard Shipping or Cainiao depending on your location.",
+    "shipping_time": {
+        "intent": "customer asking delivery time shipping time how long shipping takes",
+        "answer": "Shipping usually takes about 7-15 days depending on your country."
+    },
 
-    "shipping_time": "Shipping usually takes about 7-15 days depending on your country.",
+    "tracking": {
+        "intent": "customer asking for tracking number or how to track order",
+        "answer": "You can check the tracking number in your order page. If you want I can help you check it."
+    },
 
-    "tracking": "You can check the tracking number in your order page. If you want I can help you check it.",
+    "not_work": {
+        "intent": "customer says product not working not functioning cannot use device",
+        "answer": "Sorry about that. Could you please tell us the problem or send a video so we can help you fix it?"
+    },
 
-    "not_work": "Sorry about that. Could you please tell us the problem or send a video so we can help you fix it?",
+    "install": {
+        "intent": "customer asking installation help or how to install product",
+        "answer": "We can provide installation instructions. Please tell us which product you need help installing."
+    },
 
-    "install": "We can provide installation instructions. Please tell us which product you need help installing.",
+    "tech_support": {
+        "intent": "customer asking technical support troubleshooting assistance",
+        "answer": "Our technical support team will help you. Please describe the problem in detail."
+    },
 
-    "tech_support": "Our technical support team will help you. Please describe the problem in detail.",
+    "return": {
+        "intent": "customer asking to return product replacement exchange",
+        "answer": "If the item has a problem we can help you with return or replacement."
+    },
 
-    "return": "If the item has a problem we can help you with return or replacement.",
+    "refund": {
+        "intent": "customer asking refund money back payment return",
+        "answer": "If there is a product issue we can help arrange a refund or replacement."
+    },
 
-    "refund": "If there is a product issue we can help arrange a refund or replacement.",
+    "cancel_order": {
+        "intent": "customer asking to cancel order before shipping",
+        "answer": "If the order has not been shipped yet we can help you cancel it."
+    },
 
-    "cancel_order": "If the order has not been shipped yet we can help you cancel it.",
+    "wrong_item": {
+        "intent": "customer received wrong item incorrect product",
+        "answer": "Sorry for the mistake. Please send us a photo of the item you received."
+    },
 
-    "wrong_item": "Sorry for the mistake. Please send us a photo of the item you received.",
+    "missing_parts": {
+        "intent": "customer says some parts missing incomplete package",
+        "answer": "Sorry for the inconvenience. Please let us know which parts are missing."
+    },
 
-    "missing_parts": "Sorry for the inconvenience. Please let us know which parts are missing.",
+    "warranty": {
+    "intent": "customer asking about product warranty guarantee service",
+    "answer": "Our products come with warranty. Please tell us the issue and we will assist you."
+    },
 
-    "warranty": "Our products come with warranty. Please tell us the issue and we will assist you.",
+    "price": {
+    "intent": "customer asking price cost discount how much",
+    "answer": "The price is shown on the product page. If you have questions about pricing or discounts please let us know."
+    },
 
-    "human": "Please wait a moment. Our customer service will assist you shortly."
+    "human": {
+    "intent": "customer asking to talk with human agent real person support",
+    "answer": "Please wait a moment. Our customer service will assist you shortly."
+    }
 }

@@ -2,6 +2,8 @@
 hi
 hello
 hey
+hi dear
+hello friend
 good morning
 good evening
 
@@ -9,8 +11,8 @@ good evening
 thank you
 thanks
 thanks a lot
-appreciate it
 thank you so much
+appreciate it
 
 3 Product model（which_model）
 which model is this
@@ -41,6 +43,14 @@ money back please
 can you refund me
 I need my money back
 refund my order
+
+7 how_ship
+how long shipping
+how many days delivery
+when will my order arrive
+how long does shipping take
+delivery time please
+when can I receive my order
 
 9 Installation（install）
 how to install this
