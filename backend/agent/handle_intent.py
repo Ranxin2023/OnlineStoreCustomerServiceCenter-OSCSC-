@@ -41,7 +41,7 @@ def cosine(a, b):
 # ------------------------------
 # match intent
 # ------------------------------
-def match_intent(message, threshold=0.65):
+def match_intent(message, threshold=0.8):
 
     query_vec = model.encode(message, normalize_embeddings=True)
 

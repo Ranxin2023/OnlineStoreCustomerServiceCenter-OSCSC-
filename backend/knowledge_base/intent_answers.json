@@ -75,17 +75,17 @@
     },
 
     "warranty": {
-    "intent": "customer asking about product warranty guarantee service",
-    "answer": "Our products come with warranty. Please tell us the issue and we will assist you."
+        "intent": "customer asking about product warranty guarantee service",
+        "answer": "Our products come with warranty. Please tell us the issue and we will assist you."
     },
 
     "price": {
-    "intent": "customer asking price cost discount how much",
-    "answer": "The price is shown on the product page. If you have questions about pricing or discounts please let us know."
+        "intent": "customer asking price cost discount how much",
+        "answer": "The price is shown on the product page. If you have questions about pricing or discounts please let us know."
     },
 
     "human": {
-    "intent": "customer asking to talk with human agent real person support",
-    "answer": "Please wait a moment. Our customer service will assist you shortly."
+        "intent": "customer asking to talk with human agent real person support",
+        "answer": "Please wait a moment. Our customer service will assist you shortly."
     }
 }
