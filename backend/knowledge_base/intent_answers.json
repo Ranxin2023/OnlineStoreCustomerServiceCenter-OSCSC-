@@ -6,7 +6,7 @@
 
     "thank_you": {
         "intent": "customer says thank you thanks appreciate it",
-        "answer": "You're welcome! Let me know if you need anything else."
+        "answer": "Thanks again for supporting Hwatel store. If you have any question or need help, we are here!"
     },
 
     "which_model": {

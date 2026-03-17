@@ -35,3 +35,4 @@ backend/render_build.sh
 backend/database/orders.db
 backend/database/old_database/
 backend/embeddings/
+backend/knowledge_base/images/

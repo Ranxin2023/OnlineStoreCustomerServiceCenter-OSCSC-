@@ -55,6 +55,68 @@ from agent.handle_intent import generate_reply
 def remove_non_bmp(text):
     return ''.join(c for c in text if ord(c) <= 0xFFFF)
 
+def send_image(driver, image_name):
+    try:
+        import os
+
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        image_path = os.path.join(
+            BASE_DIR,
+            "knowledge_base",
+            "images",
+            image_name
+        )
+
+        print(f"[send_image] path: {image_path}")
+
+        file_input = WebDriverWait(driver, LOADING_TIME).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[type='file']")
+            )
+        )
+
+        file_input.send_keys(image_path)
+
+        print("[send_image] success")
+        return True
+
+    except Exception as e:
+        print("[send_image] error:", e)
+        return False
+    
+def send_message(driver, reply):
+    try:
+
+        # 输入框
+        input_box = WebDriverWait(driver, LOADING_TIME).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "textarea.im-message-input-no-auto-height")
+            )
+        )
+
+        input_box.click()
+        input_box.clear()
+        input_box.send_keys(reply)
+
+        # 发送按钮
+        send_btn = WebDriverWait(driver, LOADING_TIME).until(
+                    EC.element_to_be_clickable(
+                        (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
+                    )
+                )
+
+        driver.execute_script(
+                    "arguments[0].click();",
+                    send_btn
+                )
+
+        print("Reply sent")
+        return True
+    except Exception as e:
+        print("Reply error:", e)
+        return False
+                
 def listen_chat(driver, socketio, channel_id):
     print("[listen_chat] waiting for messages to load...")
 
@@ -70,7 +132,6 @@ def listen_chat(driver, socketio, channel_id):
     )
     last_count = 0
     # print(f"[listen_chat]Type of messages is {type(messages0)}")
-    # print(f"[listen_chat] messages length = {len(messages0)}")
 
     for i in range(len(messages0) - 1, -1, -1):
 
@@ -86,87 +147,110 @@ def listen_chat(driver, socketio, channel_id):
 
     # print(f"[listen_chat]Last seller is{last_count}")
 
-    # round robin
+    # round robin to fetch messages
     while True:
-
+        messages = None
         try:
 
             messages = driver.find_elements(
                 By.CSS_SELECTOR,
                 "div.im-message-item"
             )
+        except Exception as e:
+            print(f"[listen_chat]Error in opening messages:{e}")
+            continue
+           
+        count = len(messages)
 
-            print(f"[listen_chat] messages length in while True = {len(messages)}")
-            count = len(messages)
+        if count <= last_count:
+            continue
+        
+        new_messages = messages[last_count:]
 
-            if count <= last_count:
-                continue
-            
-            new_messages = messages[last_count:]
+        for m in new_messages:
 
-            for m in new_messages:
+            cls = m.get_attribute("class")
 
-                text = m.text.strip()
-                cls = m.get_attribute("class")
+            sender = "buyer"
 
-                sender = "buyer"
-
-                if "self" in cls:
+            if "self" in cls:
                     sender = "seller"
-
-                print("New message:", text)
-
-
-                socketio.emit(
-                    "chat_message",
-                    {
-                        "channelId": channel_id,
-                        "sender": sender,
-                        "message": text
-                    }
-                )
-                
-                if sender != "buyer":
-                    continue
-
-                reply = generate_reply(text)
-                # print(f"[listen_chat]Intent is: {reply}")
-                reply = remove_non_bmp(reply)
-                print("[listen_chat] Replying:", reply)
-
+            message=None
+            text = m.text.strip()
+            if not text:
                 try:
+                    img = m.find_element(By.CSS_SELECTOR, "img")
+                    img_url = img.get_attribute("src")
 
-                    # 输入框
-                    input_box = WebDriverWait(driver, LOADING_TIME).until(
-                        EC.presence_of_element_located(
-                            (By.CSS_SELECTOR, "textarea.im-message-input-no-auto-height")
-                        )
-                    )
+                    message = {
+                            "type": "image",
+                            "content": img_url
+                        }
 
-                    input_box.click()
-                    input_box.clear()
-                    input_box.send_keys(reply)
-
-                    # 发送按钮
-                    send_btn = WebDriverWait(driver, LOADING_TIME).until(
-                        EC.element_to_be_clickable(
-                            (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
-                        )
-                    )
-
-                    driver.execute_script(
-                        "arguments[0].click();",
-                        send_btn
-                    )
-
-                    print("Reply sent")
+                    print("📷 Image message:", img_url)
 
                 except Exception as e:
-                            print("Reply error:", e)
-                
-                last_count = count
+                    print(f"[listen_chat]Error in parsing images:{e}")
+                    message = {
+                        "type": "unknown",
+                        "content": ""
+                    }
+            else:
+                message = {
+                        "type": "text",
+                        "content": text
+                    }
 
-        except Exception as e:
-            print("Listener error:", e)
+                print("💬 Text message:", text)
+                # print(f"[listen_chat]New message:{text}")
+                # print(f"[listen_chat]Type of the message is:{type(text)}")
+
+            socketio.emit(
+                "chat_message",
+                {
+                    "channelId": channel_id,
+                    "sender": sender,
+                    "message": text
+                }
+            )
+                
+            if sender != "buyer":
+                continue
+
+            if message["type"] == "text":
+                user_text = message["content"].lower().strip()
+                print(f"[listen_chat] user text message is {user_text}")
+                # ===== 图片测试指令 =====
+                if user_text[0:6] in ['image1', 'image2', 'image3']:
+
+                    image_name = f"{user_text[0:6]}.jpg"   # image1 -> image1.jpg
+
+                    print(f"[listen_chat] Send test image: {image_name}")
+
+                    send_image(driver, image_name)
+
+                    continue  # ❗不要再走后面的回复逻辑
+
+                # ===== 正常回复 =====
+                reply = generate_reply(message["content"])
+                reply = remove_non_bmp(reply)
+
+                success=send_message(driver, reply)
+                if not success:
+                    print("[listen_chat] Failed to send message, skip...")
+                    continue
+            elif message["type"] == "image":
+                reply = "Thanks for the image. Could you please describe the issue?"
+
+            else:
+                reply = "Let me check this for you."
+
+            print("[listen_chat] Replying:", reply)
+
+            
+                
+            last_count = count
+
+        
 
         time.sleep(SWITCHING_TIME)

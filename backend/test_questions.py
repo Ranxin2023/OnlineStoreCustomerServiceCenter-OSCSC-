@@ -1,4 +1,4 @@
-from handle_intent import generate_reply
+from agent.handle_intent import generate_reply
 
 def main():
 
