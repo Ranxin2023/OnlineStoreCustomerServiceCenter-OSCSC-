@@ -9,3 +9,4 @@ flask_socketio
 eventlet
 chromedriver-binary
 deep-translator
+numpy
