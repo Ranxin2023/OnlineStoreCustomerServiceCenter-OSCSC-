@@ -108,7 +108,7 @@ def scrape_web_page():
                   15,12,6,12,16,20,
                   8,14,20,20,50,12,
                   25,15, 15,15,15, 75]
-    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
+    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths, mode='a')
     print(f"File saved to the path: {xlsx_path}")
 
     return send_file(

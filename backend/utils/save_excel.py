@@ -49,7 +49,7 @@ def write_excel(filename: str,filepath:str, excel_headers: List[str], all_rows, 
 
     wb.close()
     
-def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[str],excel_headers:List[str], col_widths:List[int]):
+def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[str],excel_headers:List[str], col_widths:List[int], mode:str='a'):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     download_dir = os.path.join(base_dir, "..", "..", "..", "downloads")
@@ -61,7 +61,7 @@ def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[
     old_rows = []
 
     # ─————————————─ 如果文件存在，读取旧数据 ─────────────────────────────
-    if os.path.exists(filepath):
+    if mode=='a' and os.path.exists(filepath):
 
         wb_old = load_workbook(filepath)
         ws_old = wb_old.active
@@ -74,6 +74,7 @@ def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[
         print(f"读取旧Excel {len(old_rows)} 条")
 
     # ──—————————— 处理新订单 ─────────────────────────────
+    
     new_rows: List[List[str]]= []
 
     for order in data:
@@ -95,8 +96,14 @@ def save_orders_to_xlsx(data:List[Dict[str, str]], filename:str, data_keys:List[
             new_row.append(order.get(key, ''))
         new_rows.append(new_row)
       
-    # ─————————─ 新订单在前，旧订单在后 ─────────────────────────────
-    all_rows = new_rows + old_rows
+    # ─————————─ ✅ 模式控制 ─────────────────────────────
+    all_rows = None
+    if mode=='a':
+        all_rows = new_rows + old_rows
+    elif mode == "w":
+        all_rows = new_rows
+    else:
+        raise ValueError("mode must be 'a' or 'w'")    
     
     # ──———————— 写 Excel ─────────────────────────────
     write_excel(filename=filename, filepath=filepath, excel_headers=excel_headers, all_rows=all_rows, col_widths=col_widths)

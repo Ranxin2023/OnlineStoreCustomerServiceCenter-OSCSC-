@@ -62,7 +62,7 @@ def export_orders():
                     8,14,20,20,50,30,12,
                     25,15, 15,15,15, 75
                     ]
-        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths)
+        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths, mode='a')
 
         return send_file(
             xlsx_path,
@@ -146,7 +146,7 @@ def download_sa_orders():
         sa_orders.append(row)
             
 
-    filepath = save_orders_to_xlsx(data=sa_orders,filename="华通燕文订单.xlsx",data_keys=keys, excel_headers=excel_headers,col_widths=column_widths)
+    filepath = save_orders_to_xlsx(data=sa_orders,filename="华通燕文订单.xlsx",data_keys=keys, excel_headers=excel_headers,col_widths=column_widths, mode='w')
 
     return send_file(
         filepath,

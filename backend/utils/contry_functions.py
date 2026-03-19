@@ -16,13 +16,16 @@ def get_country_from_address(address: str):
 def get_country_from_order(order: Dict[str, str]):
     phone = order.get("phone", "")
     address = order.get("address", "")
+    addr = address.lower() if address else ""
     if not phone and not address:
         print("[get_country_from_order] NO phone or address found")
         return "Unknown"
 
-    # fallback 用地址判断
+    # ─────────────────────────────
+    # fallback：没有 phone 用 address
+    # ─────────────────────────────
     if not phone:
-        addr = address.lower()
+        
         for key, country in ADDRESS_COUNTRY_MAP.items():
             if key in addr:
                 return country
