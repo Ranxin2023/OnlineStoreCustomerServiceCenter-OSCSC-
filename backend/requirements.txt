@@ -10,3 +10,4 @@ eventlet
 chromedriver-binary
 deep-translator
 numpy
+sentence_transformers
