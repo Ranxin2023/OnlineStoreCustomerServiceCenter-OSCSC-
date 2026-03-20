@@ -15,9 +15,9 @@ def get_country_from_address(address: str):
 
 def get_country_from_order(order: Dict[str, str]):
     phone = order.get("phone", "")
-    address = order.get("address", "")
-    addr = address.lower() if address else ""
-    if not phone and not address:
+    address_raw = order.get("address", "")
+    address = address_raw.lower() if address_raw else ""
+    if not phone and not address_raw:
         print("[get_country_from_order] NO phone or address found")
         return "Unknown"
 
@@ -27,19 +27,18 @@ def get_country_from_order(order: Dict[str, str]):
     if not phone:
         
         for key, country in ADDRESS_COUNTRY_MAP.items():
-            if key in addr:
+            if key in address:
                 return country
         return "Unknown"
     
     phone = phone.replace(" ", "").replace("-", "")
 
-   
     # ─────────────────────────────
     # +1 特殊处理（US / CA）
     # ─────────────────────────────
     if phone.startswith("+1") or phone.startswith("1"):
         for key, country in ADDRESS_COUNTRY_MAP.items():
-            if key in addr:
+            if key in address:
                 return country
         return "US"
 
@@ -48,7 +47,7 @@ def get_country_from_order(order: Dict[str, str]):
     # ─────────────────────────────
     if phone.startswith("+7") or phone.startswith("7"):
         for key, country in ADDRESS_COUNTRY_MAP.items():
-            if key in addr:
+            if key in address:
                 return country
         return "RU"
     

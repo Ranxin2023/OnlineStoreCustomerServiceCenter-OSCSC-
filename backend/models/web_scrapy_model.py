@@ -30,15 +30,50 @@ class WebScrapyModel:
             ("btns","button.next-btn span.next-btn-helper", True),
             ("note_el","span.orderBasic--value--lMC4G8D", False)
         ]
+        self.driver=None
 
     # ─────────────────────────────────────────────────────
     # 翻页
     # ─────────────────────────────────────────────────────
+        
+    def driver_setup(self)->bool:
+        return self.driver is not None
+    
+    def button_click(self, input_btn, value):
+        input_btn.click()
+        input_btn.send_keys(Keys.CONTROL + "a")
+        input_btn.send_keys(value)
+        input_btn.send_keys(Keys.ENTER)
+        time.sleep(1)
+
+    def element_located(self, crawl_obj, tag):
+        return WebDriverWait(crawl_obj, LOADING_TIME).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, tag))
+        )
+
+    def elements_located(self, crawl_obj, tag):
+        return WebDriverWait(crawl_obj, LOADING_TIME).until(
+            EC.presence_of_all_elements_located(
+                (By.CSS_SELECTOR, tag)
+            )
+        )
+    
+    def find_element_by_css_selector(self, crawl_obj, tag):
+        return crawl_obj.find_element(By.CSS_SELECTOR, tag)
+    
+    def find_elements_by_css_selector(self, crawl_obj, tag):
+        return crawl_obj.find_elements(By.CSS_SELECTOR, tag)
+    
+    def find_element_by_x_path(self, crawl_obj, tag):
+        return crawl_obj.find_element(By.XPATH, tag)
+    
+    def find_elements_by_x_path(self, crawl_obj, tag):
+        return crawl_obj.find_elements(By.XPATH, tag)
     
     def get_total_pages(self):
         """从分页显示元素读取总页数，例如 '1/30' 返回 30"""
         try:
-            display = self.driver.find_element(By.CSS_SELECTOR, "span.next-pagination-display")
+            display=self.find_element_by_css_selector(self.driver, "span.next-pagination-display")
             text = display.text.strip()  # 例如 "1/30"
             total = int(text.split("/")[-1])
             print(f"  [分页] 当前: {text}，共 {total} 页")
@@ -54,10 +89,7 @@ class WebScrapyModel:
             if total is not None and current_page >= total:
                 print(f"  [翻页] 已是最后一页 ({current_page}/{total})")
                 return False
-
-            next_btn = self.driver.find_element(
-                By.CSS_SELECTOR, "button.next-pagination-item.next-next"
-            )
+            next_btn=self.find_element_by_css_selector(self.driver, "button.next-pagination-item.next-next")
             disabled = next_btn.get_attribute("disabled")
             aria_label = next_btn.get_attribute("aria-label") or ""
             print(f"  [翻页] 找到下一页按钮: aria-label='{aria_label}', disabled='{disabled}'")
@@ -77,6 +109,9 @@ class WebScrapyModel:
     # ─────────────────────────────────────────────────────
 
     def parse_orders_from_page(self,store):
+        if not self.driver_setup():
+            print("[parse_orders_from_page]Driver is not set up, please setup the driver")
+            return None
         """
         first stage — 只解析列表数据，不进详情页
         """
@@ -84,14 +119,13 @@ class WebScrapyModel:
 
         # wait for the table to be loaded
         try:
-            WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, self.table_tag_id))
-            )
+            self.element_located(self.driver, self.table_tag_id)
+            
         except Exception:
             print("  [警告] 订单表格未加载")
             return all_orders
-
-        tables = self.driver.find_elements(By.CSS_SELECTOR, self.table_tag_id)
+        
+        tables =self.find_elements_by_css_selector(self.driver, self.table_tag_id)
         print(f"  找到 {len(tables)} 个订单")
         
         for table in tables:
@@ -102,10 +136,7 @@ class WebScrapyModel:
             try:
                 for tag, tag_id, is_multi in self.tag_list:
                     try:
-                        if is_multi:
-                            order_el[tag] = table.find_elements(By.CSS_SELECTOR, tag_id)
-                        else:
-                            order_el[tag] = table.find_element(By.CSS_SELECTOR, tag_id)
+                        order_el[tag]=table.find_elements(By.CSS_SELECTOR, tag_id) if is_multi else table.find_element(By.CSS_SELECTOR, tag_id)
                     except Exception:
                         order_el[tag] = [] if is_multi else None
             except Exception as e:
@@ -115,72 +146,71 @@ class WebScrapyModel:
             
             # 订单号 + 构造详情链接
             try:
-                    order_id_el=order_el["order_id_el"]
-                    order_id = order_id_el.text.strip()
-                    order['order_id'] = order_id
-                    cid=self.channel_id if self.channel_id else CHANNEL_ID
-                    order['order_link'] = (
-                        f"{BASE_URL}/m_apps/order-manage/"
-                        f"orderDetail?orderId={order_id}&channelId={cid}"
-                    )
-                    # print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
+                order_id_el=order_el["order_id_el"]
+                order_id = order_id_el.text.strip()
+                order['order_id'] = order_id
+                cid=self.channel_id if self.channel_id else CHANNEL_ID
+                order['order_link'] = (
+                    f"{BASE_URL}/m_apps/order-manage/"
+                    f"orderDetail?orderId={order_id}&channelId={cid}"
+                )
+                # print(f"[Parse Orders From Page]Order Link is {order['order_link']}")
             except Exception as e:
-                    print(f"  [订单号解析失败] {e}")
-                    order['order_id']   = ""
-                    order['order_link'] = ""
+                print(f"  [订单号解析失败] {e}")
+                order['order_id']   = ""
+                order['order_link'] = ""
 
             # 下单时间
             try:
-                    time_els=order_el["time_el"]
-                    
-                    order['date'] = time_els[0].text.strip() if time_els else ""
-                    # print(f"[parse_orders_from_page] Order Date is {order['date']}")
+                time_els=order_el["time_el"]
+                order['date'] = time_els[0].text.strip() if time_els else ""
+                # print(f"[parse_orders_from_page] Order Date is {order['date']}")
             except Exception:
-                    order['date'] = ""
+                order['date'] = ""
 
             # 买家
             try:
-                    buyer_el=order_el["buyer_el"]
-                    order['buyer'] = buyer_el.text.strip()
+                buyer_el=order_el["buyer_el"]
+                order['buyer'] = buyer_el.text.strip()
             except Exception:
-                    order['buyer'] = ""
+                order['buyer'] = ""
 
             # 商品名称
             try:
-                    product_el=order_el["product_el"]
-                    order['product'] = product_el.text.strip()[:80]
+                product_el=order_el["product_el"]
+                order['product'] = product_el.text.strip()[:80]
             except Exception:
-                    order['product'] = ""
+                order['product'] = ""
 
             # 规格 / SKU
             try:
-                    sku_els=order_el["sku_el"]
-                    order['specs'] = sku_els[0].text.strip() if len(sku_els) > 0 else ""
-                    order['sku']   = sku_els[1].text.strip() if len(sku_els) > 1 else ""
+                sku_els=order_el["sku_el"]
+                order['specs'] = sku_els[0].text.strip() if len(sku_els) > 0 else ""
+                order['sku']   = sku_els[1].text.strip() if len(sku_els) > 1 else ""
             except Exception:
-                    order['specs'] = ""
-                    order['sku']   = ""
+                order['specs'] = ""
+                order['sku']   = ""
 
             # 单价
             try:
-                    price_el = order_el["price_el"]
-                    order['price'] = price_el.text.strip()
+                price_el = order_el["price_el"]
+                order['price'] = price_el.text.strip()
             except Exception:
-                    order['price'] = ""
+                order['price'] = ""
 
             # 数量
             try:
-                    qty_el=order_el["qty_el"]
-                    order['qty'] = qty_el.text.strip()
+                qty_el=order_el["qty_el"]
+                order['qty'] = qty_el.text.strip()
             except Exception:
-                    order['qty'] = ""
+                order['qty'] = ""
 
             # 总金额
             try:
-                    amount_el=order_el["amount_el"]
-                    order['amount'] = amount_el.text.strip()
+                amount_el=order_el["amount_el"]
+                order['amount'] = amount_el.text.strip()
             except Exception:
-                    order['amount'] = ""
+                order['amount'] = ""
 
             # 订单状态
             try:
@@ -193,19 +223,19 @@ class WebScrapyModel:
 
             # AE/IOSS
             try:
-                    tag_els   = order_el["tag_el"]
-                    tag_texts = [el.text for el in tag_els]
-                    order['ae_ioss'] = "yes" if "AE/IOSS" in tag_texts else "no"
+                tag_els   = order_el["tag_el"]
+                tag_texts = [el.text for el in tag_els]
+                order['ae_ioss'] = "yes" if "AE/IOSS" in tag_texts else "no"
             except Exception:
-                    order['ae_ioss'] = "no"
+                order['ae_ioss'] = "no"
 
             # 半托管
             try:
-                    tag_els   = order_el["tag_el"]
-                    tag_texts  = [el.text for el in tag_els]
-                    order['semi_managed'] = "yes" if any("半托管" in t for t in tag_texts) else "no"
+                tag_els   = order_el["tag_el"]
+                tag_texts  = [el.text for el in tag_els]
+                order['semi_managed'] = "yes" if any("半托管" in t for t in tag_texts) else "no"
             except Exception:
-                    order['semi_managed'] = "no"
+                order['semi_managed'] = "no"
 
             # 操作按钮
             try:
@@ -213,13 +243,13 @@ class WebScrapyModel:
                 btn_texts    = [b.text.strip() for b in btns if b.text.strip()]
                 order['action'] = ", ".join(btn_texts)
             except Exception:
-                    order['action'] = ""
+                order['action'] = ""
             # 备注
             try:
                 note_el = ["note_el"]
                 order["remark"] = note_el.text.strip()
             except Exception:
-                    order["remark"] = ""
+                order["remark"] = ""
 
             # 详情字段先占位
             order['recipient']   = ""
@@ -244,10 +274,12 @@ class WebScrapyModel:
     # ─────────────────────────────────────────────────────
 
     def crawl_orders(self, order_list_url, max_pages=None, channel_id=None):
+        if not self.driver_setup():
+            print("[crawl_orders] Driver is not setup ")
+            return None
         self.channel_id=channel_id
         # 连接已有 Chrome，绝对不能调 driver.quit()，否则会关掉用户的浏览器
         
-
         print(f"Opening order list: {order_list_url} and Channel id: {channel_id}")
         self.driver.get(order_list_url)
         time.sleep(SWITCHING_TIME)
@@ -256,16 +288,12 @@ class WebScrapyModel:
         store = PROFILE_MAP[channel_id_]
         # 等页面真正加载完（等到有订单表格出现，最多 30 秒）
         try:
-            WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, self.table_tag_id))
-            )
+            self.element_located(self.driver, self.table_tag_id)
             print("OK 订单列表页已加载")
         except Exception:
             print("WARN 等待订单列表超时，尝试继续...")
 
         try:
-            
-
             latest_fetch = LatestFetch()
             last_time = latest_fetch.get_latest_fetch(store)
 
@@ -281,30 +309,16 @@ class WebScrapyModel:
             print(f"[AUTO TIME] {start_date} -> {end_date}")
 
             # 找到两个日期输入框
-            date_inputs = WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_all_elements_located(
-                    (By.CSS_SELECTOR, "input[placeholder*='开始'], input[placeholder*='结束']")
-                )
-            )
-
+            
+            date_inputs=self.elements_located(self.driver, "input[placeholder*='开始'], input[placeholder*='结束']")
             start_input = date_inputs[0]
             end_input = date_inputs[1]
-
+            
             # ---------- 填写开始时间 ----------
-            start_input.click()
-            start_input.send_keys(Keys.CONTROL + "a")
-            start_input.send_keys(start_date)
-            start_input.send_keys(Keys.ENTER)
-
-            time.sleep(0.5)
+            self.button_click(start_input, start_date)
 
             # ---------- 填写结束时间 ----------
-            end_input.click()
-            end_input.send_keys(Keys.CONTROL + "a")
-            end_input.send_keys(end_date)
-            end_input.send_keys(Keys.ENTER)
-
-            time.sleep(1)
+            self.button_click(end_input, end_date)
 
             # 验证是否成功
             start_val = start_input.get_attribute("value")
@@ -320,16 +334,10 @@ class WebScrapyModel:
         try:
             print("⌛ 请在浏览器中点击【查询】按钮...")
 
-            query_btn = WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//button[.//span[text()='查询']]")
-                )
-            )
-
+            query_btn=self.element_located(self.driver, "//button[.//span[text()='查询']]")
+            
             # 获取旧表格第一行（用于检测刷新）
-            old_first_row = self.driver.find_element(
-                By.CSS_SELECTOR, f"{self.table_tag_id} tbody tr"
-            )
+            old_first_row=self.find_element_by_css_selector(self.driver, f"{self.table_tag_id} tbody tr")
 
             # 重置点击状态
             self.driver.execute_script("window.__query_clicked = false;")
@@ -424,30 +432,24 @@ class WebScrapyModel:
 
         # 等待地址区域加载
         try:
-            WebDriverWait(self.driver, LOADING_TIME).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, self.address_tag_id)
-                )
-            )
+            self.element_located(self.driver, self.address_tag_id)
         except Exception:
-                print("  [详情页] 地址区域加载超时，跳过此订单")
-                return result  # 返回空的 result 字典即可
+            print("  [详情页] 地址区域加载超时，跳过此订单")
+            return result  # 返回空的 result 字典即可
 
         # ── 收集地址区域所有元素，返回给前端用于定位按钮 ──
         debug_elements = []
         try:
-                container = self.driver.find_element(
-                    By.XPATH, "//*[contains(@class,'orderInfo--address')]"
-                )
-                for el in container.find_elements(By.XPATH, ".//*")[:50]:
-                    tag = el.tag_name
-                    cls = el.get_attribute("class") or ""
-                    txt = (el.text or "").strip()[:40]
-                    onclick = el.get_attribute("onclick") or ""
-                    if cls or txt:
-                        debug_elements.append({
-                            "tag": tag, "class": cls, "text": txt, "onclick": onclick
-                        })
+            container=self.find_element_by_x_path(self.driver, "//*[contains(@class,'orderInfo--address')]")
+            for el in container.find_elements(By.XPATH, ".//*")[:50]:
+                tag = el.tag_name
+                cls = el.get_attribute("class") or ""
+                txt = (el.text or "").strip()[:40]
+                onclick = el.get_attribute("onclick") or ""
+                if cls or txt:
+                    debug_elements.append({
+                        "tag": tag, "class": cls, "text": txt, "onclick": onclick
+                    })
         except Exception as e:
                 debug_elements.append({"error": str(e)})
 
@@ -457,24 +459,25 @@ class WebScrapyModel:
         # 右边收货地址的眼睛 data-spm-anchor-id 包含 "i3"
         # clicked_by = None
         try:
-                eye_els = self.driver.find_elements(By.CSS_SELECTOR, "i[class*='orderEye--eye']")
-                target = None
-                for el in eye_els:
+            eye_els=self.find_elements_by_css_selector(self.driver, "i[class*='orderEye--eye']")
+                
+            target = None
+            for el in eye_els:
                     spm = el.get_attribute("data-spm-anchor-id") or ""
                     if ".i3." in spm:
                         target = el
                         break
-                # 如果没找到 i3，fallback 取最后一个（通常右边）
-                if target is None and eye_els:
+            # 如果没找到 i3，fallback 取最后一个（通常右边）
+            if target is None and eye_els:
                     target = eye_els[-1]
-                if target:
-                    self.driver.execute_script("arguments[0].click();", target)
-                    print("     OK 点击收货地址眼睛")
-                    time.sleep(1)
-                else:
+            if target:
+                self.driver.execute_script("arguments[0].click();", target)
+                print("     OK 点击收货地址眼睛")
+                time.sleep(1)
+            else:
                     print("    WARN 未找到眼睛按钮")
         except Exception as e:
-                print(f"    WARN 点击眼睛失败: {e}")
+            print(f"    WARN 点击眼睛失败: {e}")
 
         # ──———————— 等收件人脱敏 ──————————
         # unmasked = False
@@ -482,9 +485,11 @@ class WebScrapyModel:
             items = d.find_elements(By.CSS_SELECTOR, self.address_tag_id)
             for item in items:
                     try:
-                        label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
+                        label_element=self.find_element_by_css_selector(item, "span[class*='addressLabel']")
+                        label=label_element.text.strip()
                         if "收件人名称" in label:
-                            value = item.find_element(By.CSS_SELECTOR, "span[class*='addressValue']").text.strip()
+                            value_element=self.find_element_by_css_selector(item, "span[class*='addressValue']")
+                            value=value_element.text.strip()
                             return "*" not in value and value != ""
                     except Exception:
                         pass
@@ -504,7 +509,7 @@ class WebScrapyModel:
                 'recipient': '', 'address': '', 'postal_code': '',
                 'email': '', 'phone': '', 'tax_number': ''
             }
-        address_items = self.driver.find_elements(By.CSS_SELECTOR, self.address_tag_id)
+        address_items=self.find_elements_by_css_selector(self.driver, self.address_tag_id)
         for item in address_items:
             try:
                 label = item.find_element(By.CSS_SELECTOR, "span[class*='addressLabel']").text.strip()
@@ -532,3 +537,45 @@ class WebScrapyModel:
         #     print(f"  [extract_order_detail] 详情页错误信息：{e}")
 
         return result
+    
+    def extract_user_info(self):
+        if not self.driver_setup():
+            print("[extract_user_info] Driver is not set up")
+            return None
+        wait = WebDriverWait(self.driver, LOADING_TIME)
+
+        # ───── name ─────
+        try:
+            name_el = wait.until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, ".user-name__3a8affc")
+                )
+            )
+            name = name_el.text.strip()
+        except Exception:
+            name = ""
+
+        # ───── star ─────
+        try:
+            star_el=self.find_element_by_css_selector(self.driver, ".star-select__1676f39 .ait-select-selection-item span")
+            star = star_el.text.strip()
+        except Exception:
+            star = "No star tags"
+
+        # ───── country ─────
+        try:
+            country_el = self.find_element_by_css_selector(self.driver, "span[data-spm-anchor-id*='i6']")
+            country = country_el.text.strip()
+        except Exception:
+            country = ""
+
+        # ───── remark ─────
+        try:
+            remark_el=self.find_element_by_css_selector(self.driver, ".remark-text__5bc353e")
+            remark = remark_el.text.strip()
+        except Exception:
+            remark = ""
+
+        print(f"[user] name={name}, star={star}, country={country}, remark={remark}")
+
+        return name, star, country, remark

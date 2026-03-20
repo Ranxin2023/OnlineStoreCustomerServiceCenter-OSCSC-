@@ -1,5 +1,7 @@
 
-from constants.constant_values import SAFE_USERS, driver_pool
+from constants.constant_values import SAFE_USERS, LOADING_TIME, driver_pool
+from models.web_scrapy_model import WebScrapyModel
+from database.user_management import save_or_update_user
 from flask import Blueprint, jsonify, request
 from models.driver import Driver
 from selenium.webdriver.common.by import By
@@ -31,10 +33,11 @@ def open_chat():
         return jsonify({"error": "message is required"}), 400
 
     # 0 加载driver
+    driver=None
     try:
         driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
     except Exception as e:
-        print("Cannot open driver ...")
+        print(f"[open_chat]Cannot open driver ...{e}")
         return jsonify({"error": str(e)}), 500
 
     # 1 打开聊天页面
@@ -46,7 +49,7 @@ def open_chat():
         
     # 2 等聊天列表加载
     try:
-        WebDriverWait(driver, 20).until(
+        WebDriverWait(driver, LOADING_TIME).until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "div.im-session-item")
             )
@@ -98,97 +101,48 @@ def open_chat():
     except Exception as e:
         print(f"Error in clicking the chat {e}")
         return jsonify({"error": str(e)}), 500
-    
-    # # 4 读取最新消息
-    # try:
-    #     print("Reading latest message...")
 
-    #     WebDriverWait(driver, 20).until(
-    #         EC.presence_of_element_located(
-    #             (By.CSS_SELECTOR, "div.im-message-item")
-    #         )
-    #     )
+    # 4. 获取所有消息
+    # ✅ 等聊天内容加载
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "div.im-message-item")
+        )
+    )
 
-    #     messages = driver.find_elements(
-    #         By.CSS_SELECTOR,
-    #         "div.im-message-item"
-    #     )
+    messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
 
-    #     if not messages:
-    #         print("No messages found")
-    #         latest_message_text = ""
-    #         latest_sender = "unknown"
-    #     else:
-    #         latest = messages[-1]
+    latest_message_text = ""
+    latest_sender = ""
 
-    #         latest_message_text = latest.text.strip()
-    #         cls = latest.get_attribute("class")
+    if messages:
+        last = messages[-1]
 
-    #         # 判断发送者
-    #         if "self" in cls:
-    #             latest_sender = "seller"
-    #         else:
-    #             latest_sender = "buyer"
+        latest_message_text = last.text.strip()
+        cls = last.get_attribute("class")
 
-    #         print("Latest message:", latest_message_text)
-    #         print("Sender:", latest_sender)
+        if "self" in cls:
+            latest_sender = "seller"
+        else:
+            latest_sender = "buyer"
 
-    #     # 如果最后一条是自己发的，不再发送
-    #     if latest_sender == "seller":
-    #         print("Last message was sent by seller, skip sending")
-    #         return jsonify({
-    #             "status": "skip",
-    #             "reason": "last message from seller",
-    #             "last_message": latest_message_text
-    #         })
+    print(f"[chat] latest_message: {latest_message_text}")
+    print(f"[chat] sender: {latest_sender}")
 
-    # except Exception as e:
-    #     print(f"Error reading latest message: {e}")
-    #     return jsonify({"error": str(e)}), 500 
-    # # 5  输入 message
-    # try:
-    #     input_box = WebDriverWait(driver, 20).until(
-    #         EC.presence_of_element_located(
-    #             (By.CSS_SELECTOR, "textarea.im-message-input-no-auto-height")
-    #         )
-    #     )
-
-    #     print(f"Typing message: {message}")
-
-    #     input_box.click()  # 先确保输入框获得焦点
-    #     input_box.clear()
-    #     input_box.send_keys(message)
-
-    #     print("Message typed successfully")
-
-    #     # 等待10秒（你提示的倒计时）
-    #     print("10秒后将发送...")
-    #     time.sleep(10)
-    # except Exception as e:
-    #     print(f"Error in inputing messages {e}")
-    #     return jsonify({"error": str(e)}), 500
-
-    # # 6 点击发送按钮
-    # try:
-    #     print("Trying to find send button...")
-
-    #     send_btn = WebDriverWait(driver, 20).until(
-    #         EC.element_to_be_clickable(
-    #             (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
-    #         )
-    #     )
-
-    #     print("Send button found, clicking...")
-
-    #     driver.execute_script("arguments[0].click();", send_btn)
-
-    #     print("Message sent successfully")
-
-    #     driver.execute_script("arguments[0].click();", send_btn)
-    # except Exception as e:
-    #     print(f"Error in sending messages {e}")
-    #     return jsonify({"error": str(e)}), 500
-
+    # 5. 存储用户信息
+    web_scrapy_model=WebScrapyModel()
+    web_scrapy_model.driver=driver
+    user_name, star, country, remark = web_scrapy_model.extract_user_info()
+    print(f"[open_chat]user info are: {user_name}, {star}, {country}, {remark}")
+    save_or_update_user(
+        channel_id,
+        user_name,
+        star,
+        country,
+        remark,
+        latest_message_text,
+        latest_sender
+    )
     return jsonify({
         "status": "message typed",
         "user": target_name,

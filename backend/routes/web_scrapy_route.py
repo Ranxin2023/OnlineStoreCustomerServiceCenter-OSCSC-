@@ -13,7 +13,7 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
 
 from constants.constant_values import driver_pool, PROFILE_MAP
 from dotenv import load_dotenv
-from database.order_repository import save_orders_to_db
+from database.order_management import save_orders_to_db
 from flask import Blueprint, request, jsonify, send_file
 from models.web_scrapy_model import WebScrapyModel
 from models.driver import Driver

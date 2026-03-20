@@ -16,12 +16,43 @@ def is_chrome_reachable():
         return True
     except OSError:
         return False
-    
+
 class Driver:
     def __init__(self):
         self.chrome_profile_dir = os.path.join(os.getcwd(), "chrome_profiles")
         os.makedirs(self.chrome_profile_dir, exist_ok=True)
-    
+        
+    def is_driver_alive(self, driver):
+        try:
+            driver.current_url
+            return True
+        except Exception as e:
+            print(f"[is_driver_alive]Driver is not alive:{e}")
+            return False
+            
+    def get_driver(self, channel_id, driver_pool):
+
+        if channel_id in driver_pool:
+
+            driver = driver_pool[channel_id]
+
+            if self.is_driver_alive(driver):
+                return driver
+            else:
+                print(f"[driver] Driver dead, recreating for {channel_id}")
+                try:
+                    driver.quit()
+                except Exception as e:
+                    print(f"[get_driver]Exception in get driver is {e}")
+                del driver_pool[channel_id]
+
+        # 🔥 重新创建
+        new_driver = self.setup_chrome_driver(channel_id=channel_id)
+
+        driver_pool[channel_id] = new_driver
+
+        return new_driver
+
     def setup_chrome_driver(self, channel_id):
         profile_name = PROFILE_MAP.get(channel_id)
 
@@ -42,10 +73,4 @@ class Driver:
 
         return driver
 
-    def get_driver(self, channel_id, driver_pool):
-
-        if channel_id not in driver_pool:
-            print(f"Initializing driver for channel {channel_id}")
-            driver_pool[channel_id] = self.setup_chrome_driver(channel_id)
-
-        return driver_pool[channel_id]
+   

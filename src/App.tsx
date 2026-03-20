@@ -3,21 +3,21 @@ import "./App.css";
 import { io } from "socket.io-client";
 
 const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
-interface OrderDetail {
-  recipient: string;
-  address: string;
-  postal_code: string;
-  email: string;
-  phone: string;
-  tax_number: string;
-}
+// interface OrderDetail {
+//   recipient: string;
+//   address: string;
+//   postal_code: string;
+//   email: string;
+//   phone: string;
+//   tax_number: string;
+// }
 
-interface DetailResult {
-  data: OrderDetail;
-  unmasked: boolean;
-  clicked_by: string | null;
-  debug_elements: any[];
-}
+// interface DetailResult {
+//   data: OrderDetail;
+//   unmasked: boolean;
+//   clicked_by: string | null;
+//   debug_elements: any[];
+// }
 
 type Store = "store1" | "store2" | "store3";
 const STORE_URLS: Record<Store, string>= {
@@ -52,10 +52,10 @@ function App() {
   const [messageError3, setMessageError3] = useState<string | null>(null);
 
   // ─————————─ 订单详情爬取 ──────────────────────────────────
-  const [detailUrl, setDetailUrl] = useState("");
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
+  // const [detailUrl, setDetailUrl] = useState("");
+  // const [detailLoading, setDetailLoading] = useState(false);
+  // const [detailError, setDetailError] = useState<string | null>(null);
+  // const [detailResult, setDetailResult] = useState<DetailResult | null>(null);
   
   // ─————————─ 日志获取 ──────────────────────────────────
   const [logs, setLogs] = useState<string[]>([]);
@@ -162,29 +162,29 @@ function App() {
   };
 
   // ──—————————— 处理订单详情爬取 ──────────────────────────────
-  const handleScrapeDetail = async () => {
-    if (!detailUrl.startsWith("http")) {
-      setDetailError("Please enter a valid URL");
-      return;
-    }
-    setDetailLoading(true);
-    setDetailError(null);
-    setDetailResult(null);
-    try {
-      const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape-detail`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: detailUrl }),
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Failed to scrape detail");
-      setDetailResult(json);
-    } catch (err: any) {
-      setDetailError(err.message || "Something went wrong");
-    } finally {
-      setDetailLoading(false);
-    }
-  };
+  // const handleScrapeDetail = async () => {
+  //   if (!detailUrl.startsWith("http")) {
+  //     setDetailError("Please enter a valid URL");
+  //     return;
+  //   }
+  //   setDetailLoading(true);
+  //   setDetailError(null);
+  //   setDetailResult(null);
+  //   try {
+  //     const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape-detail`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ url: detailUrl }),
+  //     });
+  //     const json = await response.json();
+  //     if (!response.ok) throw new Error(json.error || "Failed to scrape detail");
+  //     setDetailResult(json);
+  //   } catch (err: any) {
+  //     setDetailError(err.message || "Something went wrong");
+  //   } finally {
+  //     setDetailLoading(false);
+  //   }
+  // };
 
   // ──—————————— 处理所有订单Export ──────────────────────────────
   
@@ -260,7 +260,7 @@ function App() {
 
     try {
 
-      const response = await fetch(
+      const openChatResponse = await fetch(
         `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/open`,
         {
           method: "POST",
@@ -275,14 +275,14 @@ function App() {
         }
       )
 
-      if (!response.ok) {
+      if (!openChatResponse.ok) {
         throw new Error("Failed to open chat")
       }
 
       addLog(`Chat opened for channel ${channelId}`)
 
       // 启动 listener
-      await fetch(
+      const listenerResponse=await fetch(
         `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/start-listener`,
         {
           method: "POST",
@@ -294,8 +294,12 @@ function App() {
           })
         }
       )
+      const listenerData=await listenerResponse.json()
+      if (!listenerResponse.ok) {
+        throw new Error(listenerData.error || "Listener failed")
+      }
 
-      addLog(`Chat listener started`)
+      addLog(`Chat listener started for ${channelId}`)
 
     } catch (err: any) {
 
@@ -456,6 +460,7 @@ function App() {
 
         {/* ── 订单详情爬取 ── */}
         <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
+         {/*
         <input
           className="sidebar-input"
           type="text"
@@ -474,7 +479,7 @@ function App() {
           <p style={{ color: "salmon", fontSize: "12px" }}>{detailError}</p>
         )}
         <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
-
+          */}
         {/* ──—————— chat page部分 ————————── */}
         <h3>Open Chat Page</h3>
          <input
@@ -519,6 +524,8 @@ function App() {
           {messageError3 && <p className="error-text">{messageError3}</p>}
         </div>
         {/* 详情结果展示 */}
+        {
+        /*
         {detailResult && (
           <div className="detail-result-box">
             <p style={{ marginBottom: "6px", color: detailResult.unmasked ? "#4caf50" : "#ff9800", fontWeight: "bold" }}>
@@ -546,6 +553,8 @@ function App() {
             )}
           </div>
         )}
+        */
+      }
       </aside>
       
       {/* ---------Main log area--------------- */}

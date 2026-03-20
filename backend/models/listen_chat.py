@@ -1,0 +1,3 @@
+class ListenChat:
+    def __init__(self):
+        pass

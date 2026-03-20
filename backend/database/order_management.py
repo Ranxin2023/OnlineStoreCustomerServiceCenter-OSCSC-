@@ -1,11 +1,9 @@
-import os
-import sqlite3
-from datetime import datetime
-DB_PATH = os.path.join(os.path.dirname(__file__), "orders.db")
+
+from database.db_management import get_connection
 
 
 def save_orders_to_db(orders, store):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.cursor()
 
     new_orders = []
@@ -63,37 +61,3 @@ def save_orders_to_db(orders, store):
 
     return new_orders
 
-def get_last_commit_time(store):
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT last_commit_time FROM sync_state WHERE store=?",
-        (store,)
-    )
-
-    row = cursor.fetchone()
-    conn.close()
-
-    if row:
-        return row[0]
-
-    return None
-
-def update_commit_time(store):
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute("""
-        INSERT OR REPLACE INTO sync_state (store, last_commit_time)
-        VALUES (?,?)
-    """, (store, now))
-
-    conn.commit()
-    conn.close()
-
-    return now

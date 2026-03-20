@@ -1,9 +1,10 @@
-from constants.constant_values import PAGE_LOADING_TIME, LOADING_TIME,SWITCHING_TIME
+from agent.handle_intent import generate_reply
+from models.driver import Driver
+from constants.constant_values import PAGE_LOADING_TIME, LOADING_TIME,SWITCHING_TIME, driver_pool
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-from agent.handle_intent import generate_reply
 # def listen_chat(driver, socketio, channel_id):
 
 #     last_message = None
@@ -52,6 +53,8 @@ from agent.handle_intent import generate_reply
 #             print("Listener error:", e)
 
 #         time.sleep(2)
+driver_model=Driver()
+
 def remove_non_bmp(text):
     return ''.join(c for c in text if ord(c) <= 0xFFFF)
 
@@ -101,15 +104,15 @@ def send_message(driver, reply):
 
         # 发送按钮
         send_btn = WebDriverWait(driver, LOADING_TIME).until(
-                    EC.element_to_be_clickable(
-                        (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
-                    )
-                )
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "img.im-message-input-footer-right-send-icon")
+            )
+        )
 
         driver.execute_script(
-                    "arguments[0].click();",
-                    send_btn
-                )
+            "arguments[0].click();",
+            send_btn
+        )
 
         print("Reply sent")
         return True
@@ -157,7 +160,19 @@ def listen_chat(driver, socketio, channel_id):
                 "div.im-message-item"
             )
         except Exception as e:
-            print(f"[listen_chat]Error in opening messages:{e}")
+            print(f"[listener] Driver crashed: {e}")
+
+            try:
+                driver.quit()
+            except Exception:
+                pass
+
+            # 🔥 重新获取 driver
+            driver = driver_model.get_driver(channel_id, driver_pool)
+
+            print("[listener] Driver restarted")
+
+            time.sleep(3)
             continue
            
         count = len(messages)
