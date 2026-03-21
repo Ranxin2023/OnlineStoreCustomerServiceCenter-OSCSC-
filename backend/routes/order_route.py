@@ -4,6 +4,7 @@ from utils.save_excel import save_orders_to_xlsx
 from utils.contry_functions import parse_address
 from utils.translator_functions import translate_text
 from constants.SA_headers import FILL_SA_HEADERS
+from constants.order_headers import ORDER_HEADERS, ORDER_KEYS, COLUMN_WIDTHS
 import os
 import sqlite3
 
@@ -44,25 +45,7 @@ def export_orders():
         if not orders:
             return jsonify({"error": "No orders found"}), 404
         filename = "order_list.xlsx"
-        headers = [
-            "Store", "Order ID", "Date", "Buyer","Product", "Specs", 
-            "SKU", "Price", "Qty", "Amount","Status (中文)", "Status (EN)", 
-            "AE/IOSS", "Semi-Managed", "Action","Recipient", "Address", "National Address", "Postal Code", 
-            "Email", "Phone","Country","Tax Number", "Remark", "Order Link"
-        ]
-        keys=[
-            "store", "order_id", "date", "buyer","product", "specs", 
-            "sku", "price", "qty", "amount","status", "status_en", 
-            "ae_ioss", "semi_managed", "action","recipient", "address", "short_address", "postal_code", 
-            "email", "phone","country","tax_number", "remark", "order_link" 
-        ]
-        col_widths = [
-                    10,20,18,12,40,25,
-                    15,12,6,12,16,20,
-                    8,14,20,20,50,30,12,
-                    25,15, 15,15,15, 75
-                    ]
-        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths, mode='a')
+        xlsx_path, xlsx_name = save_orders_to_xlsx(orders, filename=filename,data_keys=ORDER_KEYS,excel_headers=ORDER_HEADERS, col_widths=COLUMN_WIDTHS, mode='a')
 
         return send_file(
             xlsx_path,

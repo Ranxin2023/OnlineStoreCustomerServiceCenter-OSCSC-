@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+
 class LatestFetch:
     def __init__(self):
         self.hclaw_dir=Path(__file__).resolve().parents[3]

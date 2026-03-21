@@ -1,15 +1,16 @@
 
 from constants.constant_values import SAFE_USERS, LOADING_TIME, driver_pool
-from models.web_scrapy_model import WebScrapyModel
 from database.user_management import save_or_update_user
 from flask import Blueprint, jsonify, request
 from models.driver import Driver
+from models.web_scrapy_model import WebScrapyModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from sockets.socket_bp import socketio
-import threading
 from utils.listening_chat import listen_chat
+import threading
+import time
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -167,3 +168,105 @@ def start_listener():
     thread.start()
 
     return jsonify({"status": "listener started"})
+
+# fetch all user's into
+@chat_bp.route("/api/chat/users", methods=["POST", "OPTIONS"])
+def fetch_users():
+
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+
+    data = request.json
+    channel_id = data.get("channelId")
+    url = data.get("url")
+
+    if not url:
+        return jsonify({"error": "url is required"}), 400
+
+    # 1️⃣ driver
+    driver=None
+    try:
+        driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    driver.get(url)
+
+    # 2️⃣ 等 session
+    WebDriverWait(driver, LOADING_TIME).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "div.im-session-item")
+        )
+    )
+
+    sessions = driver.find_elements(
+        By.CSS_SELECTOR,
+        "div.im-session-item"
+    )
+
+    users = []
+
+    web_scrapy_model = WebScrapyModel()
+    web_scrapy_model.driver=driver
+    print(f"[fetch_users] total sessions: {len(sessions)}")
+
+    # 3️⃣ 遍历所有用户（核心）
+    for i, s in enumerate(sessions):
+
+        try:
+            print(f"[fetch_users] processing user {i+1}")
+
+            # 点击用户
+            driver.execute_script("arguments[0].click();", s)
+
+            # 等聊天加载
+            WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "div.im-message-item")
+                )
+            )
+
+            time.sleep(1)  # 防止 UI 未刷新完成
+
+            # ⭐ 用你已有函数
+            user_name, star, country, remark = web_scrapy_model.extract_user_info()
+            print(f"[fetch_users] user_name: {user_name}, star: {star}, country: {country}, remark: {remark}")
+            users.append({
+                "name": user_name,
+                "star": star,
+                "country": country,
+                "remark": remark
+            })
+            messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
+
+            latest_message_text = ""
+            latest_sender = ""
+
+            if messages:
+                last = messages[-1]
+
+                latest_message_text = last.text.strip()
+                cls = last.get_attribute("class")
+
+                if "self" in cls:
+                    latest_sender = "seller"
+                else:
+                    latest_sender = "buyer"
+            save_or_update_user(
+                channel_id,
+                user_name,
+                star,
+                country,
+                remark,
+                latest_message_text,
+                latest_sender
+            )
+            print(f"[fetch_users] got: {user_name}")
+
+        except Exception as e:
+            print(f"[fetch_users] skip error: {e}")
+            continue
+
+    return jsonify({
+        "users": users
+    })

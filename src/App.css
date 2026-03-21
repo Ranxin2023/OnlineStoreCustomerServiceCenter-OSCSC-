@@ -200,3 +200,16 @@ body {
 .log-empty {
   color: #64748b;
 }
+
+.user-list-panel {
+  width: 300px;
+  background: white;
+  padding: 12px;
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+}
+
+.user-item {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}

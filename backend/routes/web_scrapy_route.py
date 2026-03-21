@@ -12,6 +12,7 @@ Flask 路由 — 速卖通订单抓取（完整移植自 aliexpress_scraper.py)
 """
 
 from constants.constant_values import driver_pool, PROFILE_MAP
+from constants.order_headers import ORDER_HEADERS, ORDER_KEYS, COLUMN_WIDTHS
 from dotenv import load_dotenv
 from database.order_management import save_orders_to_db
 from flask import Blueprint, request, jsonify, send_file
@@ -39,8 +40,6 @@ driver_model=Driver()
 
 @web_scrapy_bp.route("/api/web-scrapy/scrape", methods=["POST", "OPTIONS"])
 def scrape_web_page():
-    
-   
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
 
@@ -91,24 +90,7 @@ def scrape_web_page():
     # 4.  保存Excel
     filename = f"order_list_{store}.xlsx"
     
-    headers = [
-        "Store", "Order ID", "Date", "Buyer","Product", "Specs", 
-        "SKU", "Price", "Qty", "Amount","Status (中文)", "Status (EN)", 
-        "AE/IOSS", "Semi-Managed", "Action","Recipient", "Address", "National Address", "Postal Code", 
-        "Email", "Phone","Country","Tax Number", "Remark", "Order Link"
-    ]
-
-    keys=[
-        "store", "order_id", "date", "buyer","product", "specs", 
-        "sku", "price", "qty", "amount","status", "status_en", 
-        "ae_ioss", "semi_managed", "action","recipient", "address", "short_address","postal_code", 
-        "email", "phone","country","tax_number", "remark", "order_link" 
-    ]
-    col_widths = [10,20,18,12,40,25,
-                  15,12,6,12,16,20,
-                  8,14,20,20,50,12,
-                  25,15, 15,15,15, 75]
-    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=keys,excel_headers=headers, col_widths=col_widths, mode='a')
+    xlsx_path, xlsx_name = save_orders_to_xlsx(data=new_orders, filename=filename,data_keys=ORDER_KEYS,excel_headers=ORDER_HEADERS, col_widths=COLUMN_WIDTHS, mode='a')
     print(f"File saved to the path: {xlsx_path}")
 
     return send_file(

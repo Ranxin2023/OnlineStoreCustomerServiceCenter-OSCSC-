@@ -1,7 +1,10 @@
 import { useState, useEffect} from "react";
 import "./App.css";
 import { io } from "socket.io-client";
+import { handleSetupDriver, handleScrape, handleExportOrders, handleOpenChat, handleDownloadSA, handleFetchingUsers} from "./handleFunctions.ts"
+import { STORE_CHANNEL_ID, STORE_URLS } from "./constants.ts";
 
+// setup socket
 const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
 // interface OrderDetail {
 //   recipient: string;
@@ -19,30 +22,23 @@ const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
 //   debug_elements: any[];
 // }
 
-type Store = "store1" | "store2" | "store3";
-const STORE_URLS: Record<Store, string>= {
-  store1: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=98158",
-  store2: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1471480",
-  store3: "https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196",
-  
-};
-const STORE_CHANNEL_ID: Record<Store, string>= {
-  store1: "98158",
-  store2: "1471480",
-  store3: "1579196",
-  
-};
+
 
 function App() {
-  // ─——————————─ 变量定义 ──────────────────────────────────
   // const helloMessage="Hello!"
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
+  const [users, setUsers]=useState<any[]>([])
+  // ─——————————─ loading定义 ──────────────────────────────────
   const [scrapeLoading1, setScrapeLoading1] = useState<boolean>(false);
   const [scrapeLoading2, setScrapeLoading2] = useState<boolean>(false);
   const [scrapeLoading3, setScrapeLoading3] = useState<boolean>(false);
-  const [loading1, setLoading1] = useState<boolean>(false);
-  const [loading2, setLoading2] = useState<boolean>(false);
-  const [loading3, setLoading3] = useState<boolean>(false);
+  const [openPageLoading1, setOpenPageLoading1] = useState<boolean>(false);
+  const [openPageLoading2, setOpenPageLoading2] = useState<boolean>(false);
+  const [openPageLoading3, setOpenPageLoading3] = useState<boolean>(false);
+  const [fetchUserLoading1, setFetchUserLoading1]=useState<boolean>(false)
+  const [fetchUserLoading2, setFetchUserLoading2]=useState<boolean>(false)
+  const [fetchUserLoading3, setFetchUserLoading3]=useState<boolean>(false)
+  // ─——————————─ error message定义 ──────────────────────────────────
   const [scrapyError1, setScrapyError1] = useState<string | null>(null);
   const [scrapyError2, setScrapyError2] = useState<string | null>(null);
   const [scrapyError3, setScrapyError3] = useState<string | null>(null);
@@ -50,7 +46,10 @@ function App() {
   const [messageError1, setMessageError1] = useState<string | null>(null);
   const [messageError2, setMessageError2] = useState<string | null>(null);
   const [messageError3, setMessageError3] = useState<string | null>(null);
-
+  const [fetchUserError1, setFetchUserError1]=useState<string | null>(null)
+  const [fetchUserError2, setFetchUserError2]=useState<string | null>(null)
+  const [fetchUserError3, setFetchUserError3]=useState<string | null>(null)
+  
   // ─————————─ 订单详情爬取 ──────────────────────────────────
   // const [detailUrl, setDetailUrl] = useState("");
   // const [detailLoading, setDetailLoading] = useState(false);
@@ -77,89 +76,37 @@ function App() {
     };
   }, []);
  
-  // ————————── 处理driver建立 ──────────────────────────────
   
-  const handleSetupDriver = async (store: Store) => {
-    try {
-
-      const response = await fetch(
-        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/web-scrapy/setup-driver`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ channelId: STORE_CHANNEL_ID[store]})
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to setup driver");
-      }
-
-      alert(`Driver for ${store} ready. Please login if needed.`);
-
-    } catch (err: any) {
-      alert(err.message || "Setup failed");
-    }
-  };
-
-   // ──—————————— 处理订单爬取 ──────────────────────────────
-  const handleScrape = async (
-    url: string,
-    setError: React.Dispatch<React.SetStateAction<string | null>>,
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>
-  )=>{
-     if (!url.startsWith("http")) {
-      setError("Please enter a valid URL");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_LOCALHOST_API_URL}/api/web-scrapy/scrape`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url }),
-      });
-      if (!response.ok) throw new Error("Failed to scrape website");
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = "orders.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   // ──—————————— 处理订单爬取一店 ──────────────────────────────
   const handleScrapeStore1 = async () => {
     addLog("Start scraping Store1");
     const url=STORE_URLS.store1
     handleScrape(url, setScrapyError1, setScrapeLoading1)
+    if(!openPageLoading1)
     addLog("Finished scraping Store1");
   };
-
+  
   // ──—————————— 处理订单爬取二店 ──────────────────────────────
   const handleScrapeStore2 = async () => {
+    addLog("Start scraping Store2");
     const url=STORE_URLS.store2
     handleScrape(url, setScrapyError2, setScrapeLoading2)
+    if(!openPageLoading2)
+    addLog("Finished scraping Store2");
     
   };
-
+  
   // ──—————————— 处理订单爬取三店 ──────────────────────────────
   const handleScrapeStore3 = async () => {
+    addLog("Start scraping Store3...");
     const url=STORE_URLS.store3
     handleScrape(url, setScrapyError3, setScrapeLoading3)
+    if(!openPageLoading3)
+    addLog("Finished scraping Store3...");
   };
+
+  
 
   // ──—————————— 处理订单详情爬取 ──────────────────────────────
   // const handleScrapeDetail = async () => {
@@ -186,132 +133,8 @@ function App() {
   //   }
   // };
 
-  // ──—————————— 处理所有订单Export ──────────────────────────────
   
-  const handleExportOrders = async () => {
-    try {
-      addLog("Exporting orders from database...");
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/orders/export`,
-        { method: "GET" }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to export orders");
-      }
-
-      const blob = await response.blob();
-      
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-
-      a.href = downloadUrl;
-      a.download = "orders.xlsx";
-      
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      window.URL.revokeObjectURL(downloadUrl);
-
-      addLog("Orders exported to Excel");
-    } catch (err) {
-      console.error(err);
-      addLog("Export failed");
-    }
-  };
-  // ──—————————— 处理沙特订单导出 ──────────────────────────────
-  const handleDownloadSA = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/orders/sa`
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to download Saudi orders");
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "SA_orders.xlsx";
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-    } 
-    catch (err) {
-      alert("Download failed");
-    }
-    
-  };
-  // ──—————————————————————————————— 处理客服输入 ──────────────────────────────
-  const handleOpenChat = async (
-    url: string, 
-    channelId: string, 
-    setError: React.Dispatch<React.SetStateAction<string | null>>,
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>
-  ) => {
-
-    addLog(`Opening chat window for channel ${channelId}`)
-    setLoading(true)
-
-    try {
-
-      const openChatResponse = await fetch(
-        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/open`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            url: url,
-            channelId: channelId,
-            message: message
-          })
-        }
-      )
-
-      if (!openChatResponse.ok) {
-        throw new Error("Failed to open chat")
-      }
-
-      addLog(`Chat opened for channel ${channelId}`)
-
-      // 启动 listener
-      const listenerResponse=await fetch(
-        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/start-listener`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            channelId: channelId
-          })
-        }
-      )
-      const listenerData=await listenerResponse.json()
-      if (!listenerResponse.ok) {
-        throw new Error(listenerData.error || "Listener failed")
-      }
-
-      addLog(`Chat listener started for ${channelId}`)
-
-    } catch (err: any) {
-
-      setError(err.message || "Chat open failed")
-      addLog(`Chat open failed: ${err.message}`)
-
-    } finally {
-
-      setLoading(false)
-
-    }
-  }
+ 
   // ──———————————————————— 处理客服一店输入 ──────────────────────────────
   const handleOpenChat1 = async () => {
 
@@ -324,7 +147,9 @@ function App() {
       url,
       channelId,
       setMessageError1,
-      setLoading1
+      setOpenPageLoading1, 
+      addLog, 
+      message
     )
 
   }
@@ -341,28 +166,67 @@ function App() {
       url,
       channelId,
       setMessageError2, 
-      setLoading2
+      setOpenPageLoading2, 
+      addLog, 
+      message
     )
 
   }
 
   // ──———————————————————— 处理客服三店输入 ──────────────────────────────
   const handleOpenChat3 = async () => {
-
-  const channelId = STORE_CHANNEL_ID.store3
-
+    
+    const channelId = STORE_CHANNEL_ID.store3
+    
     const url =
-      `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
-
+    `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    
     await handleOpenChat(
       url,
       channelId,
       setMessageError3,
-      setLoading3
+      setOpenPageLoading3, 
+      addLog, 
+      message
     )
-
+    
   }
- 
+  
+  // ──———————————————————— 处理客服一店用户获取 ──────────────────────────────
+  const handleFetchingUsers1=async()=>{
+    const channelId=STORE_CHANNEL_ID.store1
+    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    await handleFetchingUsers(
+      channelId,
+      url,
+      setUsers,
+      setFetchUserError1, 
+      setFetchUserLoading1, 
+      addLog
+    )
+  }
+  // ──———————————————————— 处理客服二店用户获取 ──────────────────────────────
+  const handleFetchingUsers2=async()=>{
+    const channelId=STORE_CHANNEL_ID.store2
+    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    await handleFetchingUsers(
+      channelId, url, setUsers,
+      setFetchUserError2,
+      setFetchUserLoading2,
+      addLog
+    )
+  }
+  // ──———————————————————— 处理客服三店用户获取 ──────────────────────────────
+  const handleFetchingUsers3=async()=>{
+    const channelId=STORE_CHANNEL_ID.store3
+    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    await handleFetchingUsers(channelId, url, setUsers,
+      setFetchUserError3,
+      setFetchUserLoading3,
+      addLog
+    )
+  }
+  // ──———————————————————— render page ──────────────────────────────
   return (
     <div className="app-layout">
       {/* Left sidebar */}
@@ -387,7 +251,7 @@ function App() {
         
         <button
           className="sidebar-btn"
-          onClick={handleExportOrders}
+          onClick={()=>handleExportOrders(addLog)}
           >
           📥 Export Orders (DB → Excel)
         </button>
@@ -443,9 +307,9 @@ function App() {
           <button
             className="sidebar-btn"
             onClick={handleScrapeStore3}
-            disabled={loading3}
+            disabled={scrapeLoading3}
             >
-            {loading3 ? "Scraping..." : "🔍 Scrape Store3"}
+            {scrapeLoading3 ? "Scraping..." : "🔍 Scrape Store3"}
           </button>
           {scrapyError3 && <p className="error-text">{scrapyError3}</p>}
         </div>
@@ -494,21 +358,38 @@ function App() {
           <button
             className="sidebar-btn"
             onClick={handleOpenChat1}
-            disabled={loading1}
+            disabled={openPageLoading1}
             >
-            {loading1?"💬Open Chatting": "💬 Open Chat Page Store1"}
+            {openPageLoading1?"💬Open Chatting": "💬 Open Chat Page Store1"}
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={handleFetchingUsers1}
+            disabled={fetchUserLoading1}
+            >
+            {fetchUserLoading1?"💬Fetching User List": "💬 Open User List1"}
           </button>
         </div>
+          {fetchUserError1 && <p className="error-text">{fetchUserError1}</p>}
         {messageError1 && <p className="error-text">{messageError1}</p>}
         <div className="store-grid">
           <button
             className="sidebar-btn"
             onClick={handleOpenChat2}
-            disabled={loading2}
+            disabled={openPageLoading2}
             >
             
-              {loading2?"💬Open Chatting": "💬 Open Chat Page Store2"}
+              {openPageLoading2?"💬Open Chatting": "💬 Open Chat Page Store2"}
           </button>
+          <button
+            className="sidebar-btn"
+            onClick={handleFetchingUsers2}
+            disabled={fetchUserLoading2}
+            >
+            
+            {fetchUserLoading2?"💬Fetching User List": "💬 Open User List2"}
+          </button>
+          {fetchUserError2 && <p className="error-text">{fetchUserError2}</p>}
           {messageError2 && <p className="error-text">{messageError2}</p>}
         </div>
         <div className="store-grid">
@@ -516,12 +397,36 @@ function App() {
           <button
             className="sidebar-btn"
             onClick={handleOpenChat3}
-            disabled={scrapeLoading3}
+            disabled={openPageLoading3}
             >
-              {scrapeLoading3?"💬Open Chatting": "💬 Open Chat Page Store3"}
+              {openPageLoading3?"💬Open Chatting": "💬 Open Chat Page Store3"}
             
           </button>
+          <button
+            className="sidebar-btn"
+            onClick={handleFetchingUsers3}
+            disabled={fetchUserLoading3}
+            >
+            {fetchUserLoading3?"💬Fetching User List": "💬 Open User List3"}
+            
+          </button>
+            {fetchUserError3 && <p className="error-text">{fetchUserError3}</p>}
           {messageError3 && <p className="error-text">{messageError3}</p>}
+        </div>
+        <div className="user-list-panel">
+          <h3>👥 Users</h3>
+
+          {users.length === 0 ? (
+            <p>No users yet</p>
+          ) : (
+            users.map((u, i) => (
+              <div key={i} className="user-item">
+                <p><b>{u.name}</b></p>
+                <p>⭐ {u.star || "-"}</p>
+                <p>🌍 {u.country || "-"}</p>
+              </div>
+            ))
+          )}
         </div>
         {/* 详情结果展示 */}
         {

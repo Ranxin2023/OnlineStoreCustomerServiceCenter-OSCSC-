@@ -31,10 +31,6 @@ class WebScrapyModel:
             ("note_el","span.orderBasic--value--lMC4G8D", False)
         ]
         self.driver=None
-
-    # ─────────────────────────────────────────────────────
-    # 翻页
-    # ─────────────────────────────────────────────────────
         
     def driver_setup(self)->bool:
         return self.driver is not None
@@ -69,12 +65,20 @@ class WebScrapyModel:
     
     def find_elements_by_x_path(self, crawl_obj, tag):
         return crawl_obj.find_elements(By.XPATH, tag)
-    
+        
+    def text_strip(text_el):
+        return text_el.text.strip()
+
+
+    # ─────────────────────────────────────────────────────
+    # 翻页
+    # ─────────────────────────────────────────────────────
+        
     def get_total_pages(self):
         """从分页显示元素读取总页数，例如 '1/30' 返回 30"""
         try:
             display=self.find_element_by_css_selector(self.driver, "span.next-pagination-display")
-            text = display.text.strip()  # 例如 "1/30"
+            text = self.text_strip(display) # 例如 "1/30"
             total = int(text.split("/")[-1])
             print(f"  [分页] 当前: {text}，共 {total} 页")
             return total
@@ -133,21 +137,27 @@ class WebScrapyModel:
             order = {}
             order['store']=store
             # find all the tags
-            try:
-                for tag, tag_id, is_multi in self.tag_list:
-                    try:
-                        order_el[tag]=table.find_elements(By.CSS_SELECTOR, tag_id) if is_multi else table.find_element(By.CSS_SELECTOR, tag_id)
-                    except Exception:
-                        order_el[tag] = [] if is_multi else None
-            except Exception as e:
-                print(f"  [跳过] 解析订单出错: {e}")
+            exception_flag = False
+            exception_msg = None
+            for tag, tag_id, is_multi in self.tag_list:
+                try:
+                    order_el[tag]=self.find_elements_by_css_selector(crawl_obj=table, tag=tag_id) \
+                        if is_multi else self.find_element_by_css_selector(crawl_obj=table, tag=tag_id)
+                        
+                except Exception as e:
+                    order_el[tag] = [] if is_multi else None
+                    exception_flag=True
+                    exception_msg=e
+            if exception_flag:
+                print(f"  [跳过] 解析订单出错: {exception_msg}")
                 continue
+            
                     
             
             # 订单号 + 构造详情链接
             try:
                 order_id_el=order_el["order_id_el"]
-                order_id = order_id_el.text.strip()
+                order_id = self.text_strip(order_id_el)
                 order['order_id'] = order_id
                 cid=self.channel_id if self.channel_id else CHANNEL_ID
                 order['order_link'] = (
@@ -171,7 +181,7 @@ class WebScrapyModel:
             # 买家
             try:
                 buyer_el=order_el["buyer_el"]
-                order['buyer'] = buyer_el.text.strip()
+                order['buyer'] = self.text_strip(buyer_el)
             except Exception:
                 order['buyer'] = ""
 
@@ -194,7 +204,7 @@ class WebScrapyModel:
             # 单价
             try:
                 price_el = order_el["price_el"]
-                order['price'] = price_el.text.strip()
+                order['price'] = self.text_strip(price_el)
             except Exception:
                 order['price'] = ""
 
@@ -208,14 +218,14 @@ class WebScrapyModel:
             # 总金额
             try:
                 amount_el=order_el["amount_el"]
-                order['amount'] = amount_el.text.strip()
+                order['amount'] = self.text_strip(amount_el)
             except Exception:
                 order['amount'] = ""
 
             # 订单状态
             try:
                 status_el=order_el["status_el"]
-                order['status']    = status_el.text.strip()
+                order['status']    = self.text_strip(status_el)
                 order['status_en'] = translate_status(order['status'])
             except Exception:
                 order['status']    = ""
@@ -428,7 +438,7 @@ class WebScrapyModel:
         try:
             self.driver.get(order_link)
         except Exception as e:
-            print(f"[extract_order_detail] Error to get the driver{e}")
+            print(f"[extract_order_detail] Error to get the driver: {e}")
 
         # 等待地址区域加载
         try:
@@ -463,10 +473,10 @@ class WebScrapyModel:
                 
             target = None
             for el in eye_els:
-                    spm = el.get_attribute("data-spm-anchor-id") or ""
-                    if ".i3." in spm:
-                        target = el
-                        break
+                spm = el.get_attribute("data-spm-anchor-id") or ""
+                if ".i3." in spm:
+                    target = el
+                    break
             # 如果没找到 i3，fallback 取最后一个（通常右边）
             if target is None and eye_els:
                     target = eye_els[-1]
@@ -482,17 +492,17 @@ class WebScrapyModel:
         # ──———————— 等收件人脱敏 ──————————
         # unmasked = False
         def recipient_unmasked(d):
-            items = d.find_elements(By.CSS_SELECTOR, self.address_tag_id)
+            items=self.find_element_by_css_selector(crawl_obj=d,tag=self.address_tag_id)
             for item in items:
-                    try:
-                        label_element=self.find_element_by_css_selector(item, "span[class*='addressLabel']")
-                        label=label_element.text.strip()
-                        if "收件人名称" in label:
-                            value_element=self.find_element_by_css_selector(item, "span[class*='addressValue']")
-                            value=value_element.text.strip()
-                            return "*" not in value and value != ""
-                    except Exception:
-                        pass
+                try:
+                    label_element=self.find_element_by_css_selector(item, "span[class*='addressLabel']")
+                    label=self.text_strip(label_element)
+                    if "收件人名称" in label:
+                        value_element=self.find_element_by_css_selector(item, "span[class*='addressValue']")
+                        value=value_element.text.strip()
+                        return "*" not in value and value != ""
+                except Exception:
+                    pass
             return False
 
         try:
@@ -551,7 +561,7 @@ class WebScrapyModel:
                     (By.CSS_SELECTOR, ".user-name__3a8affc")
                 )
             )
-            name = name_el.text.strip()
+            name = self.text_strip(name_el)
         except Exception:
             name = ""
 
