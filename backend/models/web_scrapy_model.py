@@ -548,41 +548,253 @@ class WebScrapyModel:
 
         return result
     
+    # def extract_user_info(self):
+    #     if not self.driver_setup():
+    #         print("[extract_user_info] Driver is not set up")
+    #         return None
+    #     wait = WebDriverWait(self.driver, LOADING_TIME)
+
+    #     # ───── name ─────
+    #     try:
+    #         name_el = wait.until(
+    #             EC.presence_of_element_located(
+    #                 (By.CSS_SELECTOR, ".user-name__3a8affc")
+    #             )
+    #         )
+    #         name = self.text_strip(name_el)
+    #     except Exception:
+    #         name = ""
+
+    #     # ───── star ─────
+    #     try:
+    #         star_el=self.find_element_by_css_selector(self.driver, ".star-select__1676f39 .ait-select-selection-item span")
+    #         star = star_el.text.strip()
+    #     except Exception:
+    #         star = "No star tags"
+
+    #     # ───── country ─────
+    #     try:
+    #         country = ""
+
+    #         els = self.find_elements_by_css_selector(
+    #             self.driver,
+    #             "span[data-spm-anchor-id]"
+    #         )
+
+    #         for el in els:
+    #             spm = el.get_attribute("data-spm-anchor-id") or ""
+    #             text = el.text.strip()
+
+    #             print(f"[DEBUG] spm={spm}, text={text}")
+
+    #             # ✅ 核心：只选 i4 区域（你说的那个）
+    #             if ".i4." in spm:
+    #                 country = text
+    #                 break
+
+
+    #     except Exception as e:
+    #         print(f"Exception in country part is:{e}")
+    #         country = ""
+
+    #     # ───── remark ─────
+    #     try:
+    #         remark_el=self.find_element_by_css_selector(self.driver, ".remark-text__5bc353e")
+    #         remark = remark_el.text.strip()
+    #     except Exception:
+    #         remark = ""
+
+    #     print(f"[user] name={name}, star={star}, country={country}, remark={remark}")
+
+    #     return name, star, country, remark
+
+    # ---------------------------------- chatgpt refined version ----------------------------------
+    # def extract_user_info(self):
+    #     if not self.driver_setup():
+    #         print("[extract_user_info] Driver is not set up")
+    #         return "", "", "", ""
+
+    #     wait = WebDriverWait(self.driver, LOADING_TIME)
+
+    #     # ✅ 等页面核心区域加载（关键）
+    #     try:
+    #         wait.until(
+    #             EC.presence_of_element_located(
+    #                 (By.CSS_SELECTOR, "[data-spm-anchor-id]")
+    #             )
+    #         )
+    #     except Exception:
+    #         print("[extract_user_info] page not fully loaded")
+
+    #     name = ""
+    #     star = ""
+    #     country = ""
+    #     remark = ""
+
+    #     # ───── name（用 i3）─────
+    #     try:
+    #         name_els = self.find_elements_by_css_selector(
+    #             self.driver,
+    #             "[data-spm-anchor-id]"
+    #         )
+
+    #         for el in name_els:
+    #             spm = el.get_attribute("data-spm-anchor-id") or ""
+    #             text = el.text.strip()
+
+    #             # DEBUG
+    #             print(f"[DEBUG][name] spm={spm}, text={text}")
+
+    #             if spm.startswith("0.0.0.i3") and text:
+    #                 name = text
+    #                 break
+
+    #     except Exception as e:
+    #         print(f"[extract_user_info] name error: {e}")
+    #         name = ""
+
+    #     # ───── star（更安全）─────
+    #     try:
+    #         star_els = self.find_elements_by_css_selector(
+    #             self.driver,
+    #             ".star-select__1676f39 .ait-select-selection-item span"
+    #         )
+    #         star = star_els[0].text.strip() if star_els else "No star tags"
+    #     except Exception:
+    #         star = "No star tags"
+
+    #     # ───── country（用 i4）─────
+    #     try:
+    #         country_els = self.find_elements_by_css_selector(
+    #             self.driver,
+    #             "span[data-spm-anchor-id]"
+    #         )
+
+    #         for el in country_els:
+    #             spm = el.get_attribute("data-spm-anchor-id") or ""
+    #             text = el.text.strip()
+
+    #             print(f"[DEBUG][country] spm={spm}, text={text}")
+
+    #             if spm.startswith("0.0.0.i4") and text:
+    #                 country = text
+    #                 break
+
+    #     except Exception as e:
+    #         print(f"[extract_user_info] country error: {e}")
+    #         country = ""
+
+    #     # ───── remark（更安全）─────
+    #     try:
+    #         remark_els = self.find_elements_by_css_selector(
+    #             self.driver,
+    #             ".remark-text__5bc353e"
+    #         )
+    #         remark = remark_els[0].text.strip() if remark_els else ""
+    #     except Exception:
+    #         remark = ""
+
+    #     print(f"[user] name={name}, star={star}, country={country}, remark={remark}")
+
+    #     return name, star, country, remark
+
+    # ----------------------------------- claude changed version ----------------------------------- 
     def extract_user_info(self):
         if not self.driver_setup():
             print("[extract_user_info] Driver is not set up")
-            return None
+            return "", "", "", ""
+
         wait = WebDriverWait(self.driver, LOADING_TIME)
 
-        # ───── name ─────
+        # ✅ 等页面核心区域加载（关键）
         try:
-            name_el = wait.until(
+            wait.until(
                 EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, ".user-name__3a8affc")
+                    (By.CSS_SELECTOR, "[data-spm-anchor-id]")
                 )
             )
-            name = self.text_strip(name_el)
         except Exception:
-            name = ""
+            print("[extract_user_info] page not fully loaded")
 
-        # ───── star ─────
+        name = ""
+        star = ""
+        country = ""
+        remark = ""
+
+        # ───── name: 直接用 class 精准定位 ─────
+        # tag: <div class="user-name__3a8affc" data-spm-anchor-id="0.0.0.i3.xxx">
         try:
-            star_el=self.find_element_by_css_selector(self.driver, ".star-select__1676f39 .ait-select-selection-item span")
-            star = star_el.text.strip()
+            name_el = self.find_element_by_css_selector(
+                self.driver,
+                "[class*='user-name__']"
+            )
+            name = name_el.text.strip()
+            print(f"[DEBUG][name] found via class: {name}")
+        except Exception:
+            # fallback: spm i3 兜底
+            try:
+                name_els = self.find_elements_by_css_selector(
+                    self.driver, "[data-spm-anchor-id*='.i3.']"
+                )
+                for el in name_els:
+                    text = el.text.strip()
+                    if text:
+                        name = text
+                        print(f"[DEBUG][name] found via spm fallback: {name}")
+                        break
+            except Exception as e:
+                print(f"[extract_user_info] name error: {e}")
+                name = ""
+
+        # ───── star（更安全）─────
+        try:
+            star_els = self.find_elements_by_css_selector(
+                self.driver,
+                ".star-select__1676f39 .ait-select-selection-item span"
+            )
+            star = star_els[0].text.strip() if star_els else "No star tags"
         except Exception:
             star = "No star tags"
 
-        # ───── country ─────
+        # # ───── country: span[data-spm-anchor-id*='.i2.'] ─────
+        # # tag: <span data-spm-anchor-id="0.0.0.i2.4eed23f1EC2cgj">France</span>
+        # try:
+        #     country_el = self.find_element_by_css_selector(
+        #         self.driver,
+        #         "span[data-spm-anchor-id*='.i2.']"
+        #     )
+        #     country = country_el.text.strip()
+        #     print(f"[DEBUG][country] found: {country}")
+        # except Exception as e:
+        #     print(f"[extract_user_info] country error: {e}")
+        #     country = ""
+        # ───── country: span[data-spm-anchor-id*='.i2.'] ─────
+        # tag: <span data-spm-anchor-id="0.0.0.i2.4eed23f1EC2cgj">France</span>
+        # 注意：部分用户没有填写国家，i2 元素不存在属于正常情况
         try:
-            country_el = self.find_element_by_css_selector(self.driver, "span[data-spm-anchor-id*='i6']")
+            # 先短暂等一下，给页面时间渲染 i2（最多等 3 秒）
+            WebDriverWait(self.driver, 3).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "span[data-spm-anchor-id*='.i3.']")
+                )
+            )
+            country_el = self.find_element_by_css_selector(
+                self.driver,
+                "span[data-spm-anchor-id*='.i3.']"
+            )
             country = country_el.text.strip()
+            print(f"[DEBUG][country] found: {country}")
         except Exception:
+            # 用户未填国家或元素未渲染，正常情况静默处理
             country = ""
-
-        # ───── remark ─────
+            print("[DEBUG][country] not found (user may have no country info)")
+        # ───── remark（更安全）─────
         try:
-            remark_el=self.find_element_by_css_selector(self.driver, ".remark-text__5bc353e")
-            remark = remark_el.text.strip()
+            remark_els = self.find_elements_by_css_selector(
+                self.driver,
+                ".remark-text__5bc353e"
+            )
+            remark = remark_els[0].text.strip() if remark_els else ""
         except Exception:
             remark = ""
 
