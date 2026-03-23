@@ -36,3 +36,4 @@ backend/database/orders.db
 backend/database/old_database/
 backend/embeddings/
 backend/knowledge_base/images/
+testing_code/*.xlsx
