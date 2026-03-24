@@ -169,7 +169,8 @@ import { STORE_CHANNEL_ID } from "./constants";
   }
 
   // ──—————————— 处理沙特订单导出 ──────────────────────────────
-  export const handleDownloadSA = async () => {
+  export const handleDownloadSA = async ( setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setLoading(true)
     try {
       const response = await fetch(
         `${import.meta.env.VITE_LOCALHOST_API_URL}/api/orders/sa`
@@ -191,6 +192,9 @@ import { STORE_CHANNEL_ID } from "./constants";
     } 
     catch (err) {
       alert("Download failed");
+    }
+    finally{
+      setLoading(false)
     }
     
   };

@@ -32,6 +32,7 @@ function App() {
   const [scrapeLoading1, setScrapeLoading1] = useState<boolean>(false);
   const [scrapeLoading2, setScrapeLoading2] = useState<boolean>(false);
   const [scrapeLoading3, setScrapeLoading3] = useState<boolean>(false);
+  const [scrapeSALoading, setScrapeSALoading] = useState<boolean>(false);
   const [openPageLoading1, setOpenPageLoading1] = useState<boolean>(false);
   const [openPageLoading2, setOpenPageLoading2] = useState<boolean>(false);
   const [openPageLoading3, setOpenPageLoading3] = useState<boolean>(false);
@@ -316,9 +317,9 @@ function App() {
         <div className="store-grid">
           <button
             className="sidebar-btn"
-            onClick={handleDownloadSA}
+            onClick={()=>handleDownloadSA(setScrapeSALoading)}
             >
-            🇸🇦 Download Saudi Orders
+            {scrapeSALoading? "Downloading":"🇸🇦 Download Saudi Orders"}
           </button>
         </div>
 

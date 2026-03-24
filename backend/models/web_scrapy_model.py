@@ -66,7 +66,7 @@ class WebScrapyModel:
     def find_elements_by_x_path(self, crawl_obj, tag):
         return crawl_obj.find_elements(By.XPATH, tag)
         
-    def text_strip(text_el):
+    def text_strip(self, text_el):
         return text_el.text.strip()
 
 

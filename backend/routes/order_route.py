@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask import send_file
 from utils.save_excel import save_orders_to_xlsx
+from excel_functions.save_excel import save_yanwen_to_xlsx
 from utils.contry_functions import parse_address
 from utils.translator_functions import translate_text
 from constants.SA_headers import FILL_SA_HEADERS
@@ -129,7 +130,7 @@ def download_sa_orders():
         sa_orders.append(row)
             
 
-    filepath = save_orders_to_xlsx(data=sa_orders,filename="华通燕文订单.xlsx",data_keys=keys, excel_headers=excel_headers,col_widths=column_widths, mode='w')
+    filepath, _= save_yanwen_to_xlsx(data_keys=keys, data=sa_orders, filename="华通燕文订单.xlsx", column_widths=column_widths)
 
     return send_file(
         filepath,
