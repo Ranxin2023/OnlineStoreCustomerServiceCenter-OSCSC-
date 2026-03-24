@@ -11,3 +11,7 @@ chromedriver-binary
 deep-translator
 numpy
 sentence_transformers
+langchain 
+langchain-openai
+chromadb 
+tiktoken
