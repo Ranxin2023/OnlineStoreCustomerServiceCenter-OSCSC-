@@ -6,25 +6,10 @@ import { STORE_CHANNEL_ID, STORE_URLS } from "./constants.ts";
 
 // setup socket
 const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
-// interface OrderDetail {
-//   recipient: string;
-//   address: string;
-//   postal_code: string;
-//   email: string;
-//   phone: string;
-//   tax_number: string;
-// }
-
-// interface DetailResult {
-//   data: OrderDetail;
-//   unmasked: boolean;
-//   clicked_by: string | null;
-//   debug_elements: any[];
-// }
-
-
-
 function App() {
+  // ─——————————─chat input 定义 ──────────────────────────────────
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   // const helloMessage="Hello!"
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
   const [users, setUsers]=useState<any[]>([])
@@ -36,9 +21,9 @@ function App() {
   const [openPageLoading1, setOpenPageLoading1] = useState<boolean>(false);
   const [openPageLoading2, setOpenPageLoading2] = useState<boolean>(false);
   const [openPageLoading3, setOpenPageLoading3] = useState<boolean>(false);
-  const [fetchUserLoading1, setFetchUserLoading1]=useState<boolean>(false)
-  const [fetchUserLoading2, setFetchUserLoading2]=useState<boolean>(false)
-  const [fetchUserLoading3, setFetchUserLoading3]=useState<boolean>(false)
+  const [fetchUserLoading1, setFetchUserLoading1] = useState<boolean>(false)
+  const [fetchUserLoading2, setFetchUserLoading2] = useState<boolean>(false)
+  const [fetchUserLoading3, setFetchUserLoading3] = useState<boolean>(false)
   // ─——————————─ error message定义 ──────────────────────────────────
   const [scrapyError1, setScrapyError1] = useState<string | null>(null);
   const [scrapyError2, setScrapyError2] = useState<string | null>(null);
@@ -47,9 +32,9 @@ function App() {
   const [messageError1, setMessageError1] = useState<string | null>(null);
   const [messageError2, setMessageError2] = useState<string | null>(null);
   const [messageError3, setMessageError3] = useState<string | null>(null);
-  const [fetchUserError1, setFetchUserError1]=useState<string | null>(null)
-  const [fetchUserError2, setFetchUserError2]=useState<string | null>(null)
-  const [fetchUserError3, setFetchUserError3]=useState<string | null>(null)
+  const [fetchUserError1, setFetchUserError1] = useState<string | null>(null)
+  const [fetchUserError2, setFetchUserError2] = useState<string | null>(null)
+  const [fetchUserError3, setFetchUserError3] = useState<string | null>(null)
   
   // ─————————─ 订单详情爬取 ──────────────────────────────────
   // const [detailUrl, setDetailUrl] = useState("");
@@ -137,9 +122,7 @@ function App() {
   
  
   // ──———————————————————— 处理客服一店输入 ──────────────────────────────
-  const handleOpenChat1 = async () => {
-
-  const channelId = STORE_CHANNEL_ID.store1
+  const handleOpenChat1 = async (channelId:string) => {
 
     const url =
       `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
@@ -156,10 +139,7 @@ function App() {
   }
 
   // ──———————————————————— 处理客服二店输入 ──────────────────────────────
-  const handleOpenChat2 = async () => {
-
-  const channelId = STORE_CHANNEL_ID.store2
-
+  const handleOpenChat2 = async (channelId:string) => {
     const url =
       `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
 
@@ -171,14 +151,10 @@ function App() {
       addLog, 
       message
     )
-
   }
 
   // ──———————————————————— 处理客服三店输入 ──────────────────────────────
-  const handleOpenChat3 = async () => {
-    
-    const channelId = STORE_CHANNEL_ID.store3
-    
+  const handleOpenChat3 = async (channelId: string) => {
     const url =
     `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
     
@@ -190,7 +166,6 @@ function App() {
       addLog, 
       message
     )
-    
   }
   
   // ──———————————————————— 处理客服一店用户获取 ──────────────────────────────
@@ -198,8 +173,7 @@ function App() {
     const channelId=STORE_CHANNEL_ID.store1
     const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
     await handleFetchingUsers(
-      channelId,
-      url,
+      channelId, url,
       setUsers,
       setFetchUserError1, 
       setFetchUserLoading1, 
@@ -221,12 +195,55 @@ function App() {
   const handleFetchingUsers3=async()=>{
     const channelId=STORE_CHANNEL_ID.store3
     const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
-    await handleFetchingUsers(channelId, url, setUsers,
+    await handleFetchingUsers(
+      channelId, url, setUsers,
       setFetchUserError3,
       setFetchUserLoading3,
       addLog
     )
   }
+  // ──———————————————————— 处理发消息程序 ──────────────────────────────
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMsg = { role: "user", text: chatInput };
+
+    setChatMessages(prev => [...prev, userMsg]);
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_LOCALHOST_API_URL}/api/chat/rag`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: chatInput
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      const botMsg = {
+        role: "bot",
+        text: data.answer
+      };
+
+      setChatMessages(prev => [...prev, botMsg]);
+
+    } catch (err) {
+      console.error(err);
+
+      setChatMessages(prev => [
+        ...prev,
+        { role: "bot", text: "Error connecting to server." }
+      ]);
+    }
+
+    setChatInput("");
+  };
   // ──———————————————————— render page ──────────────────────────────
   return (
     <div className="app-layout">
@@ -358,7 +375,7 @@ function App() {
 
           <button
             className="sidebar-btn"
-            onClick={handleOpenChat1}
+            onClick={()=>handleOpenChat1(STORE_CHANNEL_ID.store1)}
             disabled={openPageLoading1}
             >
             {openPageLoading1?"💬Open Chatting": "💬 Open Chat Page Store1"}
@@ -376,7 +393,7 @@ function App() {
         <div className="store-grid">
           <button
             className="sidebar-btn"
-            onClick={handleOpenChat2}
+            onClick={()=>handleOpenChat2(STORE_CHANNEL_ID.store2)}
             disabled={openPageLoading2}
             >
             
@@ -397,7 +414,7 @@ function App() {
 
           <button
             className="sidebar-btn"
-            onClick={handleOpenChat3}
+            onClick={()=>handleOpenChat3(STORE_CHANNEL_ID.store3)}
             disabled={openPageLoading3}
             >
               {openPageLoading3?"💬Open Chatting": "💬 Open Chat Page Store3"}
@@ -429,38 +446,6 @@ function App() {
             ))
           )}
         </div>
-        {/* 详情结果展示 */}
-        {
-        /*
-        {detailResult && (
-          <div className="detail-result-box">
-            <p style={{ marginBottom: "6px", color: detailResult.unmasked ? "#4caf50" : "#ff9800", fontWeight: "bold" }}>
-              {detailResult.unmasked ? "✅ Unmasked" : "⚠️ Still masked"}
-            </p>
-            {(
-              [
-                ["👤 Recipient",  detailResult.data.recipient],
-                ["🏠 Address",    detailResult.data.address],
-                ["📮 Postal",     detailResult.data.postal_code],
-                ["📧 Email",      detailResult.data.email],
-                ["📞 Phone",      detailResult.data.phone],
-                ["🧾 Tax No.",    detailResult.data.tax_number],
-              ] as [string, string][]
-            ).map(([label, value]) => (
-              <div key={label} className="detail-row">
-                <span className="detail-label">{label}: </span>
-                <span>{value || "—"}</span>
-              </div>
-            ))}
-            {detailResult.clicked_by && (
-              <p className="detail-clicked-by">
-                clicked_by: {detailResult.clicked_by}
-              </p>
-            )}
-          </div>
-        )}
-        */
-      }
       </aside>
       
       {/* ---------Main log area--------------- */}
@@ -490,17 +475,34 @@ function App() {
 
       {/*------------ Main chatbot area -----------------*/}
       <main className="chat-container">
-        <div className="chat-header">
-          <h3>Customer Service Chat</h3>
+        <div className="log-header">
+          <h3 style={{color: "white"}}>Customer Service Chat</h3>
+          <button
+            onClick={() => setChatMessages([])}
+            style={{ marginLeft: "auto"}}
+          >
+            Clear
+          </button>
         </div>
         <div className="chat-messages">
-          <div className="message bot">
-            👋 Hi! How can I help you with your stay today?
-          </div>
+           {chatMessages.map((msg, i) => (
+            <div key={i} className={`message ${msg.role}`}>
+              {msg.text}
+            </div>
+          ))}
         </div>
         <div className="chat-input">
-          <input type="text" placeholder="Type your message..." />
-          <button>Send</button>
+          <input
+            type="text"
+            placeholder="Type your message..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSendMessage();
+            }}
+          />
+
+          <button onClick={handleSendMessage}>Send</button>
         </div>
       </main>
       
