@@ -1,4 +1,4 @@
-from agent.handle_intent import generate_reply
+from agent.handle_intent import detect_intent, generate_reply
 
 def main():
 
@@ -13,9 +13,23 @@ def main():
             print("Bye")
             break
 
-        reply = generate_reply(message)
+        # 🔥 1️⃣ 先检测 intent
+        result = detect_intent(message)
 
-        print("AI:", reply)
+        intent = result["intent"]
+        score = result["score"]
+
+        print(f"[test questions] intent={intent}, score={score}")
+
+        # 🔥 2️⃣ 判断是否命中
+        if intent:
+            reply = generate_reply(intent)
+            source = "intent"
+        else:
+            reply = "👉 (fallback) This should go to RAG"
+            source = "fallback"
+
+        print(f"AI ({source}):", reply)
         print()
 
 if __name__ == "__main__":

@@ -1,165 +1,88 @@
-
 import os
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 from utils.load_json_ import load_json
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ANSWERS_PATH = os.path.join(
-    BASE_DIR,
-    "knowledge_base",
-    "intent_answers.json"
-)
-VECTOR_PATH = os.path.join(
-    BASE_DIR,
-    "embeddings",
-    "intent_vectors.json"
-)
 
-INTENT_ANSWERS=load_json(ANSWERS_PATH)
-VECTOR_DATA=load_json(VECTOR_PATH)
+ANSWERS_PATH = os.path.join(BASE_DIR, "knowledge_base", "intent_answers.json")
+VECTOR_PATH = os.path.join(BASE_DIR, "embeddings", "intent_vectors_openai.json")
 
-model = SentenceTransformer("BAAI/bge-small-en")
+INTENT_ANSWERS = load_json(ANSWERS_PATH)
+VECTOR_DATA = load_json(VECTOR_PATH)
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# ------------------------------
+# embedding
+# ------------------------------
+def get_embedding(text: str):
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
+    )
+    return np.array(response.data[0].embedding)
 
 # ------------------------------
 # load vectors
 # ------------------------------
-
-intent_vectors = {}
-
-for intent, item in VECTOR_DATA.items():
-    intent_vectors[intent] = np.array(item["vector"])
+intent_vectors = {
+    intent: np.array(item["vector"])
+    for intent, item in VECTOR_DATA.items()
+}
 
 # ------------------------------
 # cosine similarity
-# -----------------------------
-
+# ------------------------------
 def cosine(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 # ------------------------------
-# match intent
+# detect intent (🔥核心函数)
 # ------------------------------
-def match_intent(message, threshold=0.8):
+def detect_intent(message, threshold=0.5):
 
-    query_vec = model.encode(message, normalize_embeddings=True)
+    msg = message.lower().strip()
+
+    # 🔥 短句优先（避免 hi + 问题误判）
+    is_short = len(msg.split()) <= 3
+
+    query_vec = get_embedding(msg)
 
     best_intent = None
     best_score = 0
 
     for intent, vec in intent_vectors.items():
-
         score = cosine(query_vec, vec)
-        print(f"[match_intent] score with intent {intent} is {score}")
+
+        # print(f"[intent] {intent} score={score}")
+
         if score > best_score:
             best_score = score
             best_intent = intent
 
-    print(f"[match_intent] best={best_intent}, score={best_score}")
+    print(f"[intent] best={best_intent}, score={best_score}")
 
-    if best_score > threshold:
-        return best_intent, best_score
+    # 🔥 长句提高门槛（防误判）
+    dynamic_threshold = threshold + 0.05 if not is_short else threshold
 
-    return None, best_score
+    if best_score > dynamic_threshold:
+        return {
+            "intent": best_intent,
+            "score": best_score
+        }
+
+    return {
+        "intent": None,
+        "score": best_score
+    }
 
 # ------------------------------
-# generate reply
+# generate reply（只负责输出）
 # ------------------------------
-def generate_reply(message):
-
-    intent, score = match_intent(message)
-
-    if intent:
+def generate_reply(intent):
+    
+    if intent in INTENT_ANSWERS:
         return INTENT_ANSWERS[intent]["answer"]
 
-    return "I need assistant to help you. Please wait a moment."
-
-
-# Old code
-# KEYWORDS_PATH = os.path.join(
-#     BASE_DIR,
-#     "knowledge_base",
-#     "keywords.json"
-# )
-
-
-
-
-# KEYWORDS=load_json(KEYWORDS_PATH)
-
-# BUSINESS_INTENTS = [
-#     "which_model", 
-#     "damage",
-#     "how_ship",
-#     "shipping_time",
-#     "refund",
-#     "return",
-#     "not_work",
-#     "tracking",
-#     "install",
-#     "cancel_order",
-#     "missing_parts",
-#     "wrong_item",
-#     "warranty"
-# ]
-
-# SOCIAL_INTENTS = [
-#     "hi",
-#     "thank_you",
-#     "human"
-# ]
-
-# # def detect_intent(message):
-# #     msg = message.lower()
-# #     for intent, words in KEYWORDS.items():
-# #         for item in words:
-# #             keyword = item["word"]
-# #             if keyword in msg:
-# #                 item["count"] += 1
-# #                 return intent
-# #     return None
-
-# def save_keywords():
-#     with open(KEYWORDS_PATH, "w", encoding="utf-8") as f:
-#         json.dump(KEYWORDS, f, indent=2)
-
-# def match_keywords(intent, msg):
-
-#     if intent not in KEYWORDS:
-#         return False
-
-#     for item in KEYWORDS[intent]:
-
-#         keyword = item["word"]
-
-#         if keyword in msg:
-#             return True
-
-#     return False
-
-
-# def detect_intent(message):
-
-#     msg = message.lower()
-
-#     # 先检测业务
-#     for intent in BUSINESS_INTENTS:
-#         if match_keywords(intent, msg):
-#             return intent
-
-#     # 再检测社交
-#     for intent in SOCIAL_INTENTS:
-#         if match_keywords(intent, msg):
-#             return intent
-
-#     return None
-
-# def generate_reply(message):
-
-#     intent = detect_intent(message)
-#     print(f"[generate_reply]Intent is: {intent}")
-#     if intent and intent in INTENT_ANSWERS:
-#         return INTENT_ANSWERS[intent]
-
-#     return "Let me check this for you. One moment please."
+    return None

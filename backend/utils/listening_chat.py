@@ -1,4 +1,4 @@
-from agent.handle_intent import generate_reply
+from agent.handle_intent_bge import generate_reply
 from models.driver import Driver
 from constants.constant_values import PAGE_LOADING_TIME, LOADING_TIME,SWITCHING_TIME, driver_pool
 from selenium.webdriver.common.by import By
