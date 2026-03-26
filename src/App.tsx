@@ -1,4 +1,4 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect, useRef} from "react";
 import "./App.css";
 import { io } from "socket.io-client";
 import { handleSetupDriver, handleScrape, handleExportOrders, handleOpenChat, handleDownloadSA, handleFetchingUsers} from "./handleFunctions.ts"
@@ -7,6 +7,7 @@ import { STORE_CHANNEL_ID, STORE_URLS } from "./constants.ts";
 // setup socket
 const socket = io(`${import.meta.env.VITE_LOCALHOST_API_URL}`);
 function App() {
+  const chatRef=useRef<HTMLDivElement | null>(null);
   // ─——————————─chat input 定义 ──────────────────────────────────
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<any[]>([]);
@@ -61,8 +62,14 @@ function App() {
       socket.off("scrape_log");
     };
   }, []);
- 
   
+  // ─————————─ scroll view ──────────────────────────────────
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+    
 
   // ──—————————— 处理订单爬取一店 ──────────────────────────────
   const handleScrapeStore1 = async () => {
@@ -484,7 +491,7 @@ function App() {
             Clear
           </button>
         </div>
-        <div className="chat-messages">
+        <div className="chat-messages" ref={chatRef}>
            {chatMessages.map((msg, i) => (
             <div key={i} className={`message ${msg.role}`}>
               {msg.text}
