@@ -729,7 +729,7 @@ class WebScrapyModel:
                 "[class*='user-name__']"
             )
             name = name_el.text.strip()
-            print(f"[DEBUG][name] found via class: {name}")
+            print(f"[extract_user_info][DEBUG][name] found via class: {name}")
         except Exception:
             # fallback: spm i3 兜底
             try:
@@ -748,12 +748,14 @@ class WebScrapyModel:
 
         # ───── star（更安全）─────
         try:
+            print("[extract_user_info] Star fetching")
             star_els = self.find_elements_by_css_selector(
                 self.driver,
                 ".star-select__1676f39 .ait-select-selection-item span"
             )
             star = star_els[0].text.strip() if star_els else "No star tags"
-        except Exception:
+        except Exception as e:
+            print(f"[extract_user_info]Exception in finding star {e}")
             star = "No star tags"
 
         # # ───── country: span[data-spm-anchor-id*='.i2.'] ─────
@@ -771,23 +773,42 @@ class WebScrapyModel:
         # ───── country: span[data-spm-anchor-id*='.i2.'] ─────
         # tag: <span data-spm-anchor-id="0.0.0.i2.4eed23f1EC2cgj">France</span>
         # 注意：部分用户没有填写国家，i2 元素不存在属于正常情况
+        # ───── country ─────
         try:
-            # 先短暂等一下，给页面时间渲染 i2（最多等 3 秒）
-            WebDriverWait(self.driver, 3).until(
+            print("[extract_user_info] Country fetching")
+            WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "span[data-spm-anchor-id*='.i3.']")
+                    (By.CSS_SELECTOR, "div[class*='info__'] div[class*='basic_'] div[class*='address__']")
                 )
             )
             country_el = self.find_element_by_css_selector(
                 self.driver,
-                "span[data-spm-anchor-id*='.i3.']"
+                "div[class*='info__'] div[class*='basic_'] div[class*='address__']"
             )
             country = country_el.text.strip()
-            print(f"[DEBUG][country] found: {country}")
-        except Exception:
-            # 用户未填国家或元素未渲染，正常情况静默处理
-            country = ""
-            print("[DEBUG][country] not found (user may have no country info)")
+            print(f"[DEBUG][country] found via class: {country}")
+        except Exception as e:
+            # fallback: spm i4 兜底
+            print(f"[extract_user_info] Country Exception:\n{e}")
+            try:
+                WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located(
+                        (By.CSS_SELECTOR, "[data-spm-anchor-id*='.i4.']")
+                    )
+                )
+                country_els = self.find_elements_by_css_selector(
+                    self.driver, "[data-spm-anchor-id*='.i4.']"
+                )
+                country = ""
+                for el in country_els:
+                    text = el.text.strip()
+                    if text:
+                        country = text
+                        print(f"[DEBUG][country] found via spm fallback: {country}")
+                        break
+            except Exception as e:
+                print(f"[extract_user_info] country error: {e}")
+                country = ""
         # ───── remark（更安全）─────
         try:
             remark_els = self.find_elements_by_css_selector(

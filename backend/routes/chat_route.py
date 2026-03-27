@@ -1,5 +1,5 @@
 
-from constants.constant_values import SAFE_USERS, LOADING_TIME, driver_pool
+from constants.constant_values import SAFE_USERS, LOADING_TIME, driver_pool, TOTAL_ATTEMPT
 from database.user_management import save_or_update_user
 from flask import Blueprint, jsonify, request
 from models.driver import Driver
@@ -170,232 +170,6 @@ def start_listener():
     return jsonify({"status": "listener started"})
 
 # # fetch all user's info
-# ----------------------------------first version of chat users-----------------------------------
-# @chat_bp.route("/api/chat/users", methods=["POST", "OPTIONS"])
-# def fetch_users():
-
-#     if request.method == "OPTIONS":
-#         return jsonify({"ok": True}), 200
-
-#     data = request.json
-#     channel_id = data.get("channelId")
-#     url = data.get("url")
-
-#     if not url:
-#         return jsonify({"error": "url is required"}), 400
-
-#     # 1️⃣ driver
-#     driver=None
-#     try:
-#         driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-#     driver.get(url)
-
-#     # 2️⃣ 等 session
-#     WebDriverWait(driver, LOADING_TIME).until(
-#         EC.presence_of_element_located(
-#             (By.CSS_SELECTOR, "div.im-session-item")
-#         )
-#     )
-
-#     sessions = driver.find_elements(
-#         By.CSS_SELECTOR,
-#         "div.im-session-item"
-#     )
-
-#     users = []
-
-#     web_scrapy_model = WebScrapyModel()
-#     web_scrapy_model.driver=driver
-#     print(f"[fetch_users] total sessions: {len(sessions)}")
-
-#     # 3️⃣ 遍历所有用户（核心）
-#     for i, s in enumerate(sessions):
-
-#         try:
-#             print(f"[fetch_users] processing user {i+1}")
-
-#             # 点击用户
-#             driver.execute_script("arguments[0].click();", s)
-
-#             # 等聊天加载
-#             # WebDriverWait(driver, LOADING_TIME).until(
-#             #     EC.presence_of_element_located(
-#             #         (By.CSS_SELECTOR, "div.im-message-item")
-#             #     )
-#             # )
-#             WebDriverWait(driver, 5).until(
-#                 EC.presence_of_element_located(
-#                     (By.CSS_SELECTOR, "[data-spm-anchor-id*='.i3.']")
-#                 )
-#             )
-#             time.sleep(1)  # 防止 UI 未刷新完成
-
-#             # ⭐ 用你已有函数
-#             user_name, star, country, remark = web_scrapy_model.extract_user_info()
-#             print(f"[fetch_users] user_name: {user_name}, star: {star}, country: {country}, remark: {remark}")
-#             users.append({
-#                 "name": user_name,
-#                 "star": star,
-#                 "country": country,
-#                 "remark": remark
-#             })
-#             messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
-
-#             latest_message_text = ""
-#             latest_sender = ""
-
-#             if messages:
-#                 last = messages[-1]
-
-#                 latest_message_text = last.text.strip()
-#                 cls = last.get_attribute("class")
-
-#                 if "self" in cls:
-#                     latest_sender = "seller"
-#                 else:
-#                     latest_sender = "buyer"
-#             save_or_update_user(
-#                 channel_id,
-#                 user_name,
-#                 star,
-#                 country,
-#                 remark,
-#                 latest_message_text,
-#                 latest_sender
-#             )
-#             print(f"[fetch_users] got: {user_name}")
-
-#         except Exception as e:
-#             print(f"[fetch_users] skip error: {e}")
-#             continue
-
-#     return jsonify({
-#         "users": users
-#     })
-
-# ----------------------------------gpt refined version of chat users-----------------------------------
-# @chat_bp.route("/api/chat/users", methods=["POST", "OPTIONS"])
-# def fetch_users():
-
-#     if request.method == "OPTIONS":
-#         return jsonify({"ok": True}), 200
-
-#     data = request.json
-#     channel_id = data.get("channelId")
-#     url = data.get("url")
-
-#     if not url:
-#         return jsonify({"error": "url is required"}), 400
-
-#     # ───── 1. 获取 driver ─────
-#     try:
-#         driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-#     driver.get(url)
-
-#     # ───── 2. 等 session 列表加载 ─────
-#     WebDriverWait(driver, 10).until(
-#         EC.presence_of_element_located(
-#             (By.CSS_SELECTOR, "div.im-session-item")
-#         )
-#     )
-
-#     users = []
-#     processed_users = set()
-
-#     web_scrapy_model = WebScrapyModel()
-#     web_scrapy_model.driver = driver
-
-   
-#     print("[fetch_users] start...")
-
-#     # ───── 3. 核心循环（稳定版）─────
-#     while True:
-
-#         sessions = driver.find_elements(By.CSS_SELECTOR, "div.im-session-item")
-
-#         new_found = False
-
-#         for s in sessions:
-#             try:
-#                 # 👉 获取左侧用户名字（用于去重）
-#                 name = s.text.strip()
-
-#                 if not name or name in processed_users:
-#                     continue
-
-#                 print(f"[fetch_users] processing: {name}")
-
-#                 processed_users.add(name)
-
-#                 # ───── 滚动到可见 ─────
-#                 driver.execute_script(
-#                     "arguments[0].scrollIntoView({block: 'center'});",
-#                     s
-#                 )
-#                 time.sleep(0.4)
-#             except Exception as e:
-#                 print(f"[fetch_users] skip error: {e}")
-#                 continue
-
-#             # ───── 获取当前右侧用户（用于判断切换）─────
-#             old_name = ""
-#             try:
-#                 old_name = driver.find_element(
-#                         By.CSS_SELECTOR,
-#                         "[data-spm-anchor-id*='.i3.']"
-#                     ).text.strip()
-#             except Exception as e:
-#                 print(f"[fetch_users] Error in fetching old name:{e}")
-#                 continue
-
-#                 # ───── 点击（真实点击）─────
-#             try:
-#                 ActionChains(driver).move_to_element(s).pause(0.2).click().perform()
-
-#                 # ───── 等待用户切换（关键）─────
-#                 WebDriverWait(driver, 5).until(
-#                     lambda d: d.find_element(
-#                         By.CSS_SELECTOR,
-#                         "[data-spm-anchor-id*='.i3.']"
-#                     ).text.strip() != old_name
-#                 )
-
-#                 time.sleep(0.5)
-#             except Exception as e:
-            
-#                 print(f"[fetch_users] Error in clicking users: {e}")
-#                 continue
-
-#             # ───── 获取用户信息 ─────
-#             user_name, star, country, remark = web_scrapy_model.extract_user_info()
-
-#             print(f"[fetch_users] got: {user_name}, {country}")
-
-#             users.append({
-#                     "name": user_name,
-#                     "star": star,
-#                     "country": country,
-#                     "remark": remark
-#                 })
-
-#             new_found = True
-
-#         # ───── 没新用户 → 结束 ─────
-#         if not new_found:
-#             break
-
-#     print(f"[fetch_users] finished, total users: {len(users)}")
-
-#     return jsonify({
-#         "users": users
-#     })
-
 # ----------------------------------claude refined version of chat users-----------------------------------
 @chat_bp.route("/api/chat/users", methods=["POST", "OPTIONS"])
 def fetch_users():
@@ -431,76 +205,54 @@ def fetch_users():
     web_scrapy_model = WebScrapyModel()
     web_scrapy_model.driver = driver
 
-   
     print("[fetch_users] start...")
 
-    # ───── 3. 核心循环（稳定版）─────
+    # ───── 3. 核心循环 ─────
     while True:
 
         sessions = driver.find_elements(By.CSS_SELECTOR, "div.im-session-item")
-
         new_found = False
 
         for s in sessions:
+            # ───── 去重 ─────
             try:
-                # 左侧列表项用户名: <b data-spm-anchor-id="0.0.0.i8.xxx">sean potts</b>
-                name_el = s.find_element(By.CSS_SELECTOR, ".im-session-item-name-content b")
-                name = name_el.text.strip()
-
+                name = s.find_element(By.CSS_SELECTOR, ".im-session-item-name-content b").text.strip()
                 if not name or name in processed_users:
                     continue
-
-                print(f"[fetch_users] processing: {name}")
                 processed_users.add(name)
-
-                # ───── 滚动到可见 ─────
-                driver.execute_script(
-                    "arguments[0].scrollIntoView({block: 'center'});",
-                    s
-                )
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", s)
                 time.sleep(0.4)
             except Exception as e:
                 print(f"[fetch_users] skip error: {e}")
                 continue
 
-            # ───── 获取当前右侧面板用户名快照（判断切换用）─────
-            # 右侧面板 selector: [class*='user-name__']
-            # 左侧列表 selector: .im-session-item-name-content b  ← 完全不同！
+            # ───── 快照当前 user-name（判断面板是否切换）─────
             old_name = ""
             try:
-                old_name = driver.find_element(
-                    By.CSS_SELECTOR,
-                    "[class*='user-name__']"
-                ).text.strip()
-                print(f"[fetch_users] old_name (right panel): '{old_name}'")
+                old_name = driver.find_element(By.CSS_SELECTOR, "[class*='user-name__']").text.strip()
             except Exception:
-                print("[fetch_users] old_name not found, likely first user")
+                pass
 
-            # ───── 点击 + 等右侧面板切换（带重试）─────
+            # ───── 点击 + 等面板切换 ─────
             click_ok = False
-            for attempt in range(2):
+            for attempt in range(TOTAL_ATTEMPT):
                 try:
                     driver.execute_script("arguments[0].click();", s)
                     time.sleep(0.5)
 
-                    _captured = old_name
-                    if _captured:
-                        # 等右侧面板 user-name 变成不同的值
+                    if old_name:
                         WebDriverWait(driver, 8).until(
-                            lambda d, _o=_captured: d.find_element(
-                                By.CSS_SELECTOR,
-                                "[class*='user-name__']"
+                            lambda d, _o=old_name: d.find_element(
+                                By.CSS_SELECTOR, "[class*='user-name__']"
                             ).text.strip() != _o
                         )
                     else:
-                        # 第一个用户：右侧面板首次出现 user-name
                         WebDriverWait(driver, 8).until(
                             EC.presence_of_element_located(
                                 (By.CSS_SELECTOR, "[class*='user-name__']")
                             )
                         )
 
-                    time.sleep(0.5)
                     click_ok = True
                     print(f"[fetch_users] panel switched OK (attempt {attempt+1})")
                     break
@@ -510,59 +262,30 @@ def fetch_users():
                     time.sleep(1)
 
             if not click_ok:
-                print("[fetch_users] both click attempts failed, reading panel anyway...")
+                print("[fetch_users] both click attempts failed, skipping...")
+                processed_users.discard(name)
+                continue
 
-            # ───── 等右侧面板 user-name 稳定后读取 ─────
-            try:
-                WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "[class*='user-name__']")
-                    )
-                )
-            except Exception:
-                pass
+            # ───── 读取用户信息 ─────
             user_name, star, country, remark = web_scrapy_model.extract_user_info()
-
             print(f"[fetch_users] got: {user_name}, {country}")
-            users.append({
-                    "name": user_name,
-                    "star": star,
-                    "country": country,
-                    "remark": remark
-                })
 
-            new_found = True
-            messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
-
+            # ───── 获取最新消息 ─────
             latest_message_text = ""
             latest_sender = ""
-
+            messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
             if messages:
                 last = messages[-1]
-
                 latest_message_text = last.text.strip()
-                cls = last.get_attribute("class")
+                latest_sender = "seller" if "self" in last.get_attribute("class") else "buyer"
 
-                if "self" in cls:
-                    latest_sender = "seller"
-                else:
-                    latest_sender = "buyer"
-            save_or_update_user(
-                channel_id,
-                user_name,
-                star,
-                country,
-                remark,
-                latest_message_text,
-                latest_sender
-            )
+            save_or_update_user(channel_id, user_name, star, country, remark, latest_message_text, latest_sender)
 
-        # ───── 没新用户 → 结束 ─────
+            users.append({"name": user_name, "star": star, "country": country, "remark": remark})
+            new_found = True
+
         if not new_found:
             break
 
     print(f"[fetch_users] finished, total users: {len(users)}")
-
-    return jsonify({
-        "users": users
-    })
+    return jsonify({"users": users})

@@ -1,58 +1,11 @@
-from agent.handle_intent_bge import generate_reply
+from agent.rag.rag_reply import rag_reply
 from models.driver import Driver
 from constants.constant_values import PAGE_LOADING_TIME, LOADING_TIME,SWITCHING_TIME, driver_pool
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-# def listen_chat(driver, socketio, channel_id):
 
-#     last_message = None
-
-#     print("Start chat listener...")
-
-#     while True:
-
-#         try:
-
-#             messages = driver.find_elements(
-#                 By.CSS_SELECTOR,
-#                 "div.im-message-item"
-#             )
-
-#             if not messages:
-#                 time.sleep(2)
-#                 continue
-
-#             latest = messages[-1]
-
-#             text = latest.text.strip()
-#             cls = latest.get_attribute("class")
-
-#             sender = "buyer"
-#             if "self" in cls:
-#                 sender = "seller"
-
-#             # 防止重复推送
-#             if text and text != last_message:
-
-#                 print(f"New {sender} message: {text}")
-
-#                 socketio.emit(
-#                     "chat_message",
-#                     {
-#                         "channelId": channel_id,
-#                         "sender": sender,
-#                         "message": text
-#                     }
-#                 )
-
-#                 last_message = text
-
-#         except Exception as e:
-#             print("Listener error:", e)
-
-#         time.sleep(2)
 driver_model=Driver()
 
 def remove_non_bmp(text):
@@ -247,7 +200,8 @@ def listen_chat(driver, socketio, channel_id):
                     continue  # ❗不要再走后面的回复逻辑
 
                 # ===== 正常回复 =====
-                reply = generate_reply(message["content"])
+            
+                reply = rag_reply(message["content"])
                 reply = remove_non_bmp(reply)
 
                 success=send_message(driver, reply)

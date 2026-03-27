@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from openai import OpenAI
-from utils.answer_processing import format_bullet_answer
+from agent.rag.rag_utils import format_bullet_answer
 import os
 
 rag_bp = Blueprint("rag", __name__)
