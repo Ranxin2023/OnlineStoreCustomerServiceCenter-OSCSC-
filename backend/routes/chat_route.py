@@ -131,8 +131,8 @@ def open_chat():
     print(f"[chat] sender: {latest_sender}")
 
     # 5. 存储用户信息
-    web_scrapy_model=WebScrapyModel()
-    web_scrapy_model.driver=driver
+    web_scrapy_model=WebScrapyModel(driver=driver)
+    # web_scrapy_model.driver=driver
     user_name, star, country, remark = web_scrapy_model.extract_user_info()
     print(f"[open_chat]user info are: {user_name}, {star}, {country}, {remark}")
     save_or_update_user(
@@ -192,8 +192,9 @@ def fetch_users():
 
     driver.get(url)
 
+    web_scrapy_model = WebScrapyModel(driver=driver)
     # ───── 2. 等 session 列表加载 ─────
-    WebDriverWait(driver, 10).until(
+    WebDriverWait(driver, LOADING_TIME).until(
         EC.presence_of_element_located(
             (By.CSS_SELECTOR, "div.im-session-item")
         )
@@ -202,8 +203,7 @@ def fetch_users():
     users = []
     processed_users = set()
 
-    web_scrapy_model = WebScrapyModel()
-    web_scrapy_model.driver = driver
+    # web_scrapy_model.driver = driver
 
     print("[fetch_users] start...")
 

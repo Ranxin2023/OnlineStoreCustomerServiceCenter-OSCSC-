@@ -20,6 +20,7 @@ from models.web_scrapy_model import WebScrapyModel
 from models.driver import Driver
 from models.load_latest_files import LatestFetch
 from utils.save_excel import  save_orders_to_xlsx
+from utils.order_scrapy import crawl_orders
 import re
 
 load_dotenv()
@@ -30,7 +31,7 @@ web_scrapy_bp = Blueprint("web_scrapy", __name__)
 
 # ──—————— model Definition ─────────────────────────────────
 
-web_scrapy_model=WebScrapyModel()
+
 driver_model=Driver()
 
 
@@ -60,12 +61,13 @@ def scrape_web_page():
     print(f"Start scraping: {url}, max_pages: {max_pages or 'ALL'}")
 
     driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
-    web_scrapy_model.driver=driver
+    web_scrapy_model=WebScrapyModel(driver=driver)
     all_orders=None
     try:
         # 1️. 爬订单
-        all_orders = web_scrapy_model.crawl_orders(
-            url,
+        all_orders = crawl_orders(
+            web_scrapy_model=web_scrapy_model,
+            order_list_url=url,
             max_pages=max_pages,
             channel_id=channel_id
         )
