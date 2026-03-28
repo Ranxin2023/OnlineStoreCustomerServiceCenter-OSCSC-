@@ -3,12 +3,13 @@ import socket
 from constants.constant_values import PROFILE_MAP, DEBUG_PORT
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-
+from selenium.webdriver.remote.webdriver import WebDriver
+from typing import Dict, Optional 
 # ─────────────────────────────────────────────────────
 # Driver — 自动检测并启动 Chrome
 # ─────────────────────────────────────────────────────
 
-def is_chrome_reachable():
+def is_chrome_reachable()->bool:
     """检查 Chrome 调试端口是否可连接"""
     try:
         s = socket.create_connection(("127.0.0.1", DEBUG_PORT), timeout=2)
@@ -22,7 +23,7 @@ class Driver:
         self.chrome_profile_dir = os.path.join(os.getcwd(), "chrome_profiles")
         os.makedirs(self.chrome_profile_dir, exist_ok=True)
         
-    def is_driver_alive(self, driver):
+    def is_driver_alive(self, driver)->bool:
         try:
             driver.current_url
             return True
@@ -30,7 +31,7 @@ class Driver:
             print(f"[is_driver_alive]Driver is not alive:{e}")
             return False
             
-    def get_driver(self, channel_id, driver_pool):
+    def get_driver(self, channel_id, driver_pool: Dict[str, Optional[WebDriver]])->WebDriver:
 
         if channel_id in driver_pool:
 
@@ -53,7 +54,7 @@ class Driver:
 
         return new_driver
 
-    def setup_chrome_driver(self, channel_id):
+    def setup_chrome_driver(self, channel_id:str)->WebDriver:
         profile_name = PROFILE_MAP.get(channel_id)
 
         if not profile_name:

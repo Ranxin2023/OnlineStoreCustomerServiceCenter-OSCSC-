@@ -1,6 +1,6 @@
 from constants.country_maps import PHONE_COUNTRY_MAP, ADDRESS_COUNTRY_MAP
-from typing import Dict, Tuple
-def get_country_from_address(address: str):
+from typing import Dict, Tuple, Optional
+def get_country_from_address(address: str)->Optional[str]:
     if not address:
         return None
 
@@ -13,7 +13,7 @@ def get_country_from_address(address: str):
     return None
 
 
-def get_country_from_order(order: Dict[str, str]):
+def get_country_from_order(order: Dict[str, str])->str:
     phone = order.get("phone", "")
     address_raw = order.get("address", "")
     address = address_raw.lower() if address_raw else ""

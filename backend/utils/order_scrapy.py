@@ -352,7 +352,7 @@ def parse_orders_from_page(web_scrape_model:Optional[WebScrapyModel],store):
 # 主抓取流程
 # ─────────────────────────────────────────────────────
 
-def crawl_orders(web_scrapy_model:Optional[WebScrapyModel], order_list_url, max_pages=None, channel_id=None):
+def crawl_orders(web_scrapy_model:Optional[WebScrapyModel], order_list_url:str, max_pages=None, channel_id=None):
         if not web_scrapy_model.driver_setup():
             print("[crawl_orders] Driver is not setup ")
             return None

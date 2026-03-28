@@ -1,6 +1,6 @@
 import os
 import re
-from utils.load_json_ import load_json
+from utils._load_json import load_json
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROMPT_PATH = os.path.join(BASE_DIR, "agent", "rag", "prompt.md")
 
@@ -38,6 +38,7 @@ def format_bullet_answer(answer: str):
 def load_prompt():
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         return f.read()
+    
 def build_prompt(context, query):
     template = load_prompt()
     return template.replace("{retrieved_chunks}", context)\

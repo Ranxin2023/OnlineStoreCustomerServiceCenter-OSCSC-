@@ -45,6 +45,7 @@ def jsonify_answers(answer: str, source: str, score, context):
         "rag_score":score,
         "context":context
     })
+
 @rag_bp.route("/api/chat/rag", methods=["POST", "OPTIONS"])
 def rag_chat():
     if request.method == "OPTIONS":

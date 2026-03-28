@@ -133,7 +133,7 @@ def open_chat():
     # 5. 存储用户信息
     web_scrapy_model=WebScrapyModel(driver=driver)
     # web_scrapy_model.driver=driver
-    user_name, star, country, remark = web_scrapy_model.extract_user_info()
+    user_name, star, country, remark, orders = web_scrapy_model.extract_user_info()
     print(f"[open_chat]user info are: {user_name}, {star}, {country}, {remark}")
     save_or_update_user(
         channel_id,
@@ -267,8 +267,9 @@ def fetch_users():
                 continue
 
             # ───── 读取用户信息 ─────
-            user_name, star, country, remark = web_scrapy_model.extract_user_info()
+            user_name, star, country, remark, orders = web_scrapy_model.extract_user_info()
             print(f"[fetch_users] got: {user_name}, {country}")
+            print(f"[fetch_users ]orders:\n{orders}")
 
             # ───── 获取最新消息 ─────
             latest_message_text = ""
@@ -279,7 +280,8 @@ def fetch_users():
                 latest_message_text = last.text.strip()
                 latest_sender = "seller" if "self" in last.get_attribute("class") else "buyer"
 
-            save_or_update_user(channel_id, user_name, star, country, remark, latest_message_text, latest_sender)
+            save_or_update_user(channel_id=channel_id, name=user_name, star=star, country=country, remark=remark, orders=orders, 
+                                last_message=latest_message_text, last_sender= latest_sender)
 
             users.append({"name": user_name, "star": star, "country": country, "remark": remark})
             new_found = True

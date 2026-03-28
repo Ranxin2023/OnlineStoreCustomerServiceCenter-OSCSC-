@@ -2,7 +2,7 @@
 import os
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from utils.load_json_ import load_json
+from utils._load_json import load_json
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANSWERS_PATH = os.path.join(

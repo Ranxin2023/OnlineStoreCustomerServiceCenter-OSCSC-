@@ -4,16 +4,17 @@ from dotenv import load_dotenv
 # from models.load_latest_files import LatestFetch
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 # from utils.translator_functions import translate_status
 # from utils.contry_functions import get_country_from_order
 import time
-
+from typing import Optional
 load_dotenv()
 
 class WebScrapyModel:
-    def __init__(self, driver):
+    def __init__(self, driver:Optional[WebDriver]):
         self.driver=driver
         self.table_tag_id="table.next-table-row"
         self.address_tag_id="div[class*='orderInfo--addressItem']"
@@ -54,11 +55,12 @@ class WebScrapyModel:
             )
         )
     
-    def find_element_by_css_selector(self, crawl_obj, tag):
+    def find_element_by_css_selector(self, crawl_obj, tag:str):
         return crawl_obj.find_element(By.CSS_SELECTOR, tag)
     
-    def find_elements_by_css_selector(self, crawl_obj, tag):
+    def find_elements_by_css_selector(self, crawl_obj, tag:str):
         return crawl_obj.find_elements(By.CSS_SELECTOR, tag)
+    
     def find_element_by_x_path(self, crawl_obj, tag, time=ELEMENT_LOADING_TIME):
        
         return WebDriverWait(crawl_obj, time).until(
@@ -67,7 +69,7 @@ class WebScrapyModel:
             )
         )
     
-    def find_elements_by_x_path(self, crawl_obj, tag):
+    def find_elements_by_x_path(self, crawl_obj, tag:str):
         return WebDriverWait(crawl_obj, time).until(
             EC.presence_of_elements_located(
                 (By.XPATH, tag)
@@ -77,7 +79,7 @@ class WebScrapyModel:
     def text_strip(self, text_el):
         return text_el.text.strip()
 
-    def execute_script(self,execute_obj, execute_code):
+    def execute_script(self,execute_obj, execute_code:str):
         execute_obj.execute_script(execute_code)
 
   
@@ -345,7 +347,52 @@ class WebScrapyModel:
             remark = remark_els[0].text.strip() if remark_els else ""
         except Exception:
             remark = ""
+        # ───── orders ─────
+        try:
+            # 有订单
+            order_cards = self.find_elements_by_css_selector(
+                self.driver,
+                "div[class*='im-order-card']"
+            )
+            if order_cards:
+                card = order_cards[0]  # 取第一个订单
+                
+                status = ""
+                order_id = ""
+                creation = ""
+                
+                try:
+                    status = self.find_element_by_css_selector(
+                        card, "span.im-order-card-status"
+                    ).text.strip()
+                except Exception:
+                    pass
+                
+                try:
+                    order_id = self.find_element_by_css_selector(
+                        card, "span.im-order-card-subtitle"
+                    ).text.strip()
+                except Exception:
+                    pass
+                
+                try:
+                    creation_els = self.find_elements_by_css_selector(
+                        card, "span.im-order-card-subtitle"
+                    )
+                    creation = creation_els[1].text.strip() if len(creation_els) > 1 else ""
+                except Exception:
+                    pass
 
+                orders = f"{status} | {order_id} | {creation}"
+                print(f"[DEBUG][orders] found: {orders}")
+            else:
+                # 没有订单
+                orders = "No Orders"
+                print("[DEBUG][orders] No Orders")
+
+        except Exception as e:
+            print(f"[extract_user_info] orders error: {e}")
+            orders = ""
         print(f"[user] name={name}, star={star}, country={country}, remark={remark}")
 
-        return name, star, country, remark
+        return name, star, country, remark, orders

@@ -2,11 +2,11 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-
+from utils._load_json import load_json
 class LatestFetch:
     def __init__(self):
         self.hclaw_dir=Path(__file__).resolve().parents[3]
-        print(f"HClaw dir is {self.hclaw_dir}")
+        # print(f"HClaw dir is {self.hclaw_dir}")
         self.file_path = os.path.join(self.hclaw_dir, "downloads", "latest_fetch.json")
 
     def update_latest_fetch(self,store):
@@ -17,8 +17,7 @@ class LatestFetch:
         data = {}
 
         if os.path.exists(self.file_path):
-            with open(self.file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            data=load_json(self.file_path)
 
         # —————————— 更新时间 ——————————
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
