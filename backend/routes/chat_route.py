@@ -1,6 +1,7 @@
 
-from constants.constant_values import SAFE_USERS, LOADING_TIME, driver_pool, TOTAL_ATTEMPT
+from constants.constant_values import LOADING_TIME, driver_pool, TOTAL_ATTEMPT
 from database.user_management import save_or_update_user
+from database.user_order_management import save_user_orders
 from flask import Blueprint, jsonify, request
 from models.driver import Driver
 from models.web_scrapy_model import WebScrapyModel
@@ -10,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from sockets.socket_bp import socketio
 from utils.listening_chat import listen_chat
+from utils.extract_user_info import extract_user_info
 import threading
 import time
 
@@ -18,9 +20,144 @@ chat_bp = Blueprint("chat", __name__)
 
 driver_model=Driver()
 
+# @chat_bp.route("/api/chat/open", methods=["POST", "OPTIONS"])
+# def open_chat():
+#     # option method return 
+#     if request.method == "OPTIONS":
+#         return jsonify({"ok": True}), 200
+
+#     data = request.json
+
+#     channel_id = data.get("channelId")
+#     url = data.get("url")
+#     message = data.get("message")
+
+#     if not message:
+#         return jsonify({"error": "message is required"}), 400
+
+#     # 0 加载driver
+#     driver=None
+#     try:
+#         driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
+#     except Exception as e:
+#         print(f"[open_chat]Cannot open driver ...{e}")
+#         return jsonify({"error": str(e)}), 500
+
+#     # 1 打开聊天页面
+#     try:
+#         driver.get(url)
+#     except Exception as e:
+#         print("Cannot open URL...")
+#         return jsonify({"error": str(e)}), 500
+        
+#     # 2 等聊天列表加载
+#     try:
+#         WebDriverWait(driver, LOADING_TIME).until(
+#             EC.presence_of_element_located(
+#                 (By.CSS_SELECTOR, "div.im-session-item")
+#             )
+#         )
+
+#         sessions = driver.find_elements(
+#             By.CSS_SELECTOR,
+#             "div.im-session-item"
+#         )
+
+#         target_session = None
+#         target_name = None
+#         for s in sessions:
+
+#             try:
+#                 name = s.find_element(
+#                     By.CSS_SELECTOR,
+#                     "div.im-session-item-name-content b"
+#                 ).text.strip()
+
+#                 print("Found chat:", name)
+
+#                 for safe_user in SAFE_USERS:
+#                     if safe_user in name:
+#                         target_session = s
+#                         target_name = name
+#                         break
+
+#                 if target_session:
+#                     break
+
+#             except Exception:
+#                 continue
+
+#         if target_session is None:
+#             return jsonify({"error": "No safe user session found"}), 404
+#     except Exception as e:
+#         print("Error in loading the chat box")
+#         return jsonify({"error": str(e)}), 500
+    
+#     # 3 点击聊天
+#     try:
+#         driver.execute_script(
+#             "arguments[0].click();",
+#             target_session
+#         )
+
+#         print(f"Opened chat with {target_name}")
+#     except Exception as e:
+#         print(f"Error in clicking the chat {e}")
+#         return jsonify({"error": str(e)}), 500
+
+#     # 4. 获取所有消息
+#     # ✅ 等聊天内容加载
+#     WebDriverWait(driver, 10).until(
+#         EC.presence_of_element_located(
+#             (By.CSS_SELECTOR, "div.im-message-item")
+#         )
+#     )
+
+#     messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
+
+#     latest_message_text = ""
+#     latest_sender = ""
+
+#     if messages:
+#         last = messages[-1]
+
+#         latest_message_text = last.text.strip()
+#         cls = last.get_attribute("class")
+
+#         if "self" in cls:
+#             latest_sender = "seller"
+#         else:
+#             latest_sender = "buyer"
+
+#     print(f"[chat] latest_message: {latest_message_text}")
+#     print(f"[chat] sender: {latest_sender}")
+
+#     # 5. 存储用户信息
+#     web_scrapy_model=WebScrapyModel(driver=driver)
+#     # web_scrapy_model.driver=driver
+#     user_name, star, country, remark, orders = web_scrapy_model.extract_user_info()
+#     print(f"[open_chat]user info are: {user_name}, {star}, {country}, {remark}")
+#     save_or_update_user(
+#         channel_id,
+#         user_name,
+#         star,
+#         country,
+#         remark,
+#         latest_message_text,
+#         latest_sender
+#     )
+#     return jsonify({
+#         "status": "message typed",
+#         "user": target_name,
+#         "message": message
+#     })
+
+# 🔥 防止重复启动 listener
+active_listeners = {}
+
 @chat_bp.route("/api/chat/open", methods=["POST", "OPTIONS"])
 def open_chat():
-    # option method return 
+
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
 
@@ -28,128 +165,63 @@ def open_chat():
 
     channel_id = data.get("channelId")
     url = data.get("url")
-    message = data.get("message")
 
-    if not message:
-        return jsonify({"error": "message is required"}), 400
+    if not url:
+        return jsonify({"error": "url is required"}), 400
 
-    # 0 加载driver
-    driver=None
+    # =========================
+    # 1️⃣ 获取 driver
+    # =========================
     try:
         driver = driver_model.get_driver(channel_id, driver_pool=driver_pool)
     except Exception as e:
-        print(f"[open_chat]Cannot open driver ...{e}")
         return jsonify({"error": str(e)}), 500
 
-    # 1 打开聊天页面
+    # =========================
+    # 2️⃣ 打开聊天页面
+    # =========================
     try:
         driver.get(url)
     except Exception as e:
-        print("Cannot open URL...")
         return jsonify({"error": str(e)}), 500
-        
-    # 2 等聊天列表加载
+
+    # =========================
+    # 3️⃣ 等待页面加载
+    # =========================
     try:
         WebDriverWait(driver, LOADING_TIME).until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "div.im-session-item")
             )
         )
-
-        sessions = driver.find_elements(
-            By.CSS_SELECTOR,
-            "div.im-session-item"
-        )
-
-        target_session = None
-        target_name = None
-        for s in sessions:
-
-            try:
-                name = s.find_element(
-                    By.CSS_SELECTOR,
-                    "div.im-session-item-name-content b"
-                ).text.strip()
-
-                print("Found chat:", name)
-
-                for safe_user in SAFE_USERS:
-                    if safe_user in name:
-                        target_session = s
-                        target_name = name
-                        break
-
-                if target_session:
-                    break
-
-            except Exception:
-                continue
-
-        if target_session is None:
-            return jsonify({"error": "No safe user session found"}), 404
+        print("[open_chat] Chat page loaded")
     except Exception as e:
-        print("Error in loading the chat box")
-        return jsonify({"error": str(e)}), 500
-    
-    # 3 点击聊天
-    try:
-        driver.execute_script(
-            "arguments[0].click();",
-            target_session
+        return jsonify({"error": f"Chat page load failed:{e}"}), 500
+
+    # =========================
+    # 4️⃣ 🔥 启动 listener（核心）
+    # =========================
+    if channel_id not in active_listeners:
+
+        thread = threading.Thread(
+            target=listen_chat,
+            args=(driver, socketio, channel_id),
+            daemon=True
         )
+        thread.start()
 
-        print(f"Opened chat with {target_name}")
-    except Exception as e:
-        print(f"Error in clicking the chat {e}")
-        return jsonify({"error": str(e)}), 500
+        active_listeners[channel_id] = True
+        print("[open_chat] listener started")
 
-    # 4. 获取所有消息
-    # ✅ 等聊天内容加载
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "div.im-message-item")
-        )
-    )
+    else:
+        print("[open_chat] listener already running")
 
-    messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
-
-    latest_message_text = ""
-    latest_sender = ""
-
-    if messages:
-        last = messages[-1]
-
-        latest_message_text = last.text.strip()
-        cls = last.get_attribute("class")
-
-        if "self" in cls:
-            latest_sender = "seller"
-        else:
-            latest_sender = "buyer"
-
-    print(f"[chat] latest_message: {latest_message_text}")
-    print(f"[chat] sender: {latest_sender}")
-
-    # 5. 存储用户信息
-    web_scrapy_model=WebScrapyModel(driver=driver)
-    # web_scrapy_model.driver=driver
-    user_name, star, country, remark, orders = web_scrapy_model.extract_user_info()
-    print(f"[open_chat]user info are: {user_name}, {star}, {country}, {remark}")
-    save_or_update_user(
-        channel_id,
-        user_name,
-        star,
-        country,
-        remark,
-        latest_message_text,
-        latest_sender
-    )
+    # =========================
+    # 5️⃣ 返回
+    # =========================
     return jsonify({
-        "status": "message typed",
-        "user": target_name,
-        "message": message
+        "status": "chat opened + listener running"
     })
-
 
 @chat_bp.route("/api/chat/start-listener", methods=["POST"])
 def start_listener():
@@ -254,7 +326,7 @@ def fetch_users():
                         )
 
                     click_ok = True
-                    print(f"[fetch_users] panel switched OK (attempt {attempt+1})")
+                    # print(f"[fetch_users] panel switched OK (attempt {attempt+1})")
                     break
 
                 except Exception as e:
@@ -267,9 +339,10 @@ def fetch_users():
                 continue
 
             # ───── 读取用户信息 ─────
-            user_name, star, country, remark, orders = web_scrapy_model.extract_user_info()
-            print(f"[fetch_users] got: {user_name}, {country}")
-            print(f"[fetch_users ]orders:\n{orders}")
+            user_name, star, country, remark, orders, order_status, \
+                order_status_code ,order_id, order_creation_date = extract_user_info(web_scrapy_model=web_scrapy_model)
+            # print(f"[fetch_users] got: {user_name}, {country}")
+            # print(f"[fetch_users ]orders:\n{orders}")
 
             # ───── 获取最新消息 ─────
             latest_message_text = ""
@@ -282,7 +355,8 @@ def fetch_users():
 
             save_or_update_user(channel_id=channel_id, name=user_name, star=star, country=country, remark=remark, orders=orders, 
                                 last_message=latest_message_text, last_sender= latest_sender)
-
+            save_user_orders(user_name=user_name, orders=orders,status=order_status,
+                             status_code=order_status_code, order_id=order_id, order_time=order_creation_date)
             users.append({"name": user_name, "star": star, "country": country, "remark": remark})
             new_found = True
 
@@ -291,3 +365,4 @@ def fetch_users():
 
     print(f"[fetch_users] finished, total users: {len(users)}")
     return jsonify({"users": users})
+

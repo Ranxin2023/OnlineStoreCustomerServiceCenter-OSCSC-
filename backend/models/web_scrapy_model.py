@@ -1,16 +1,15 @@
 from constants.constant_values import LOADING_TIME, ELEMENT_LOADING_TIME
-# from datetime import datetime
 from dotenv import load_dotenv
-# from models.load_latest_files import LatestFetch
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-# from utils.translator_functions import translate_status
+from typing import Optional
+from utils.translator_functions import translate_text, find_status_code
 # from utils.contry_functions import get_country_from_order
 import time
-from typing import Optional
+
 load_dotenv()
 
 class WebScrapyModel:
@@ -257,7 +256,12 @@ class WebScrapyModel:
         star = ""
         country = ""
         remark = ""
-
+        orders=""
+        order_status=""
+        order_status_en=""
+        order_status_code=0
+        order_id=""
+        order_creation_date=""
         # ───── name: 直接用 class 精准定位 ─────
         # tag: <div class="user-name__3a8affc" data-spm-anchor-id="0.0.0.i3.xxx">
         try:
@@ -357,12 +361,8 @@ class WebScrapyModel:
             if order_cards:
                 card = order_cards[0]  # 取第一个订单
                 
-                status = ""
-                order_id = ""
-                creation = ""
-                
                 try:
-                    status = self.find_element_by_css_selector(
+                    order_status = self.find_element_by_css_selector(
                         card, "span.im-order-card-status"
                     ).text.strip()
                 except Exception:
@@ -379,11 +379,13 @@ class WebScrapyModel:
                     creation_els = self.find_elements_by_css_selector(
                         card, "span.im-order-card-subtitle"
                     )
-                    creation = creation_els[1].text.strip() if len(creation_els) > 1 else ""
+                    order_creation_date = creation_els[1].text.strip() if len(creation_els) > 1 else ""
                 except Exception:
                     pass
 
-                orders = f"{status} | {order_id} | {creation}"
+                orders = f"{order_status} | {order_id} | {order_creation_date}"
+                order_status_en=translate_text(orders)
+                order_status_code=find_status_code(order_status_en)
                 print(f"[DEBUG][orders] found: {orders}")
             else:
                 # 没有订单
@@ -393,6 +395,7 @@ class WebScrapyModel:
         except Exception as e:
             print(f"[extract_user_info] orders error: {e}")
             orders = ""
-        print(f"[user] name={name}, star={star}, country={country}, remark={remark}")
+        print(f"[user] name={name}, star={star}, country={country}, remark={remark} orders ={orders} ")
 
-        return name, star, country, remark, orders
+        return name, star, country, remark, orders, order_status, order_status_code,order_id, order_creation_date
+

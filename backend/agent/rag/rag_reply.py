@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from openai import OpenAI
-
+from database.user_order_management import fetch_orders_by_username
 import os
 
 load_dotenv()
@@ -22,7 +22,14 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # =========================
 # 🔥 核心函数（给 listen_chat 用）
 # =========================
-def rag_reply(query: str) -> str:
+def rag_reply(query: str, user_name:str) -> str:
+    # =========================
+    # 🔥 获取用户订单（关键🔥）
+    # =========================
+    orders = fetch_orders_by_username(user_name=user_name)
+    print(f"[chat] orders = {orders}")
+    if not orders or orders == "No Orders":
+        return "Welcome to ZBooster. This is Ziri."
 
     try:
         print(f"[rag_reply] query={query}")

@@ -58,6 +58,17 @@ def init_db():
             UNIQUE(channel_id, name)
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_orders (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            order_id VARCHAR(50) UNIQUE,
+            status VARCHAR(50),
+            created_at DATETIME,
+            channel_id VARCHAR(20),
+            created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status_code INT DEFAULT -1
+        );
+    """)
     conn.commit()
     conn.close()
 
