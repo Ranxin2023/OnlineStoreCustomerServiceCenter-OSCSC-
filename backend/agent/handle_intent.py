@@ -81,8 +81,13 @@ def detect_intent(message, threshold=0.5):
 # generate reply（只负责输出）
 # ------------------------------
 def generate_reply(intent):
-    
-    if intent in INTENT_ANSWERS:
-        return INTENT_ANSWERS[intent]["answer"]
+    if intent not in INTENT_ANSWERS:
+        return None
+    data = INTENT_ANSWERS[intent]
 
-    return None
+    return {
+        "answer": data.get("answer", ""),
+        "jpg": data.get("jpg", []) or [],
+        "mp4": data.get("mp4", []) or [],
+        "alert": data.get("alert", "")
+    }

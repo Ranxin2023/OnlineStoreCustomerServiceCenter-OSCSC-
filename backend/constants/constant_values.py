@@ -30,7 +30,7 @@ STATUS_TRANSLATION = {
 
 
 SAFE_USERS = [
-    "ae800292"
+    "ae800292 user"
 ]
 
 driver_pool = {}

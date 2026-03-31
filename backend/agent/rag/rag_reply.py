@@ -1,10 +1,10 @@
-from agent.rag.rag_utils import format_bullet_answer, generate_reply, build_prompt
-from agent.handle_intent import detect_intent
+from agent.rag.rag_utils import format_bullet_answer, build_prompt
+from agent.handle_intent import detect_intent, generate_reply
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from openai import OpenAI
-from database.user_order_management import fetch_orders_by_username
+# from database.user_order_management import fetch_orders_by_username
 import os
 
 load_dotenv()
@@ -26,10 +26,15 @@ def rag_reply(query: str, user_name:str) -> str:
     # =========================
     # 🔥 获取用户订单（关键🔥）
     # =========================
-    orders = fetch_orders_by_username(user_name=user_name)
-    print(f"[chat] orders = {orders}")
-    if not orders or orders == "No Orders":
-        return "Welcome to ZBooster. This is Ziri."
+    # orders = fetch_orders_by_username(user_name=user_name)
+    # print(f"[chat] orders = {orders}")
+    # if not orders or orders == "No Orders":
+    #     return {
+    #         "answer": "Welcome to ZBooster. This is Ziri.",
+    #         "jpg": [],
+    #         "mp4": [],
+    #         "alert": ""
+    #     }
 
     try:
         print(f"[rag_reply] query={query}")
@@ -45,7 +50,14 @@ def rag_reply(query: str, user_name:str) -> str:
         print(f"[INTENT] intent={intent}, score={score}")
 
         if intent:
-            return generate_reply(intent)
+            result = generate_reply(intent)
+
+            return {
+                "answer": result["answer"],
+                "jpg": result["jpg"],
+                "mp4": result["mp4"],
+                "alert": result["alert"]
+            }
 
         # =========================
         # 2️⃣ RAG 检索
@@ -68,7 +80,12 @@ def rag_reply(query: str, user_name:str) -> str:
         SIM_THRESHOLD = 1.0
 
         if best_score > SIM_THRESHOLD:
-            return "Sorry, I can only assist with product and order related questions."
+            return {
+                "answer": "Sorry, I can only assist with product and order related questions.",
+                "jpg": [],
+                "mp4": [],
+                "alert": ""
+            }
 
         # =========================
         # 4️⃣ 正常 RAG
@@ -87,7 +104,12 @@ def rag_reply(query: str, user_name:str) -> str:
         # 🔥 保留你原来的 bullet formatting
         answer = format_bullet_answer(answer)
 
-        return answer
+        return {
+            "answer": answer,
+            "jpg": [],
+            "mp4": [],
+            "alert": ""
+        }
 
     except Exception as e:
         print("[rag_reply ERROR]:", e)

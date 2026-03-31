@@ -1,6 +1,6 @@
 from agent.rag.rag_reply import rag_reply
 from models.driver import Driver
-from constants.constant_values import  LOADING_TIME
+from constants.constant_values import  LOADING_TIME, SAFE_USERS
 from models.web_scrapy_model import WebScrapyModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -282,7 +282,8 @@ def listen_chat(driver, socketio, channel_id):
                         continue
 
                     print(f"💬 {user_name}: {text}")
-
+                    if user_name not in SAFE_USERS:
+                        continue
                     # 🔥 去重（关键）
                     if user_name in last_message_map and last_message_map[user_name] == text:
                         continue
@@ -290,10 +291,26 @@ def listen_chat(driver, socketio, channel_id):
                     last_message_map[user_name] = text
 
                     # 🔥 AI回复
-                    reply = rag_reply(text, user_name)
+                    result = rag_reply(text, user_name)
 
-                    print(f"🤖 Reply from listening chat: {reply}")
+                    print(f"🤖 Reply from listening chat:\n {result}")
+                    # 1️⃣ 文本
+                    send_message(driver, result["answer"])
 
+                    # 2️⃣ 图片
+                    for img in result["jpg"]:
+                        send_image(driver, img)
+
+                    # 3️⃣ 视频
+                    for v in result["mp4"]:
+                        send_image(driver, v)
+
+                    # 4️⃣ alert
+                    if result["alert"]:
+                        socketio.emit("alert_message", {
+                            "channelId": channel_id,
+                            "alert": result["alert"]
+                        })
                     # send_message(driver, reply)
 
                     time.sleep(0.5)
@@ -304,7 +321,12 @@ def listen_chat(driver, socketio, channel_id):
 
         except Exception as e:
             print("[listen_chat] main error:", e)
-
+            return {
+                "answer": "Let me check this for you.",
+                "jpg": [],
+                "mp4": [],
+                "alert": ""
+            }
         time.sleep(3)
         
 def listen_chat_with_user(driver, socketio, channel_id, user_name):

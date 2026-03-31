@@ -48,9 +48,9 @@ def build_prompt(context, query):
 # ------------------------------
 # generate reply（只负责输出）
 # ------------------------------
-def generate_reply(intent):
+# def generate_reply(intent):
     
-    if intent in INTENT_ANSWERS:
-        return INTENT_ANSWERS[intent]["answer"]
+#     if intent in INTENT_ANSWERS:
+#         return INTENT_ANSWERS[intent]["answer"]
 
-    return None
+#     return None
