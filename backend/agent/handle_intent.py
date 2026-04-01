@@ -27,7 +27,7 @@ def get_embedding(text: str):
 # load vectors
 # ------------------------------
 intent_vectors = {
-    intent: np.array(item["vector"])
+    intent: np.array(item["vectors"])
     for intent, item in VECTOR_DATA.items()
 }
 
@@ -43,8 +43,6 @@ def cosine(a, b):
 def detect_intent(message, threshold=0.5):
 
     msg = message.lower().strip()
-
-    # 🔥 短句优先（避免 hi + 问题误判）
     is_short = len(msg.split()) <= 3
 
     query_vec = get_embedding(msg)
@@ -52,18 +50,17 @@ def detect_intent(message, threshold=0.5):
     best_intent = None
     best_score = 0
 
-    for intent, vec in intent_vectors.items():
-        score = cosine(query_vec, vec)
+    for intent, vectors in intent_vectors.items():
 
-        # print(f"[intent] {intent} score={score}")
+        for vec in vectors:   # 🔥 遍历每个子intent
+            score = cosine(query_vec, vec)
 
-        if score > best_score:
-            best_score = score
-            best_intent = intent
+            if score > best_score:
+                best_score = score
+                best_intent = intent
 
     print(f"[intent] best={best_intent}, score={best_score}")
 
-    # 🔥 长句提高门槛（防误判）
     dynamic_threshold = threshold + 0.05 if not is_short else threshold
 
     if best_score > dynamic_threshold:

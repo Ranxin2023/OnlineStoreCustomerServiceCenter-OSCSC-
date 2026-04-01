@@ -1,0 +1,179 @@
+{
+  "hi": {
+    "desc": "greeting",
+    "intent": "hi hello hey good morning good afternoon good evening",
+    "answer": "Hello! Welcome to Zebooster. I am Zily. Can I help you?",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "thank_you": {
+    "desc": "gratitude",
+    "intent": "thank you thanks thank you so much appreciate it",
+    "answer": "Thanks again for supporting Hwatel store. If you have any question or need help, we are here!",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "damage": {
+    "desc": "product damaged",
+    "intent": "item arrived damaged broken defective dirty",
+    "answer": "I feel so sorry. Could you please send us a photo including bar code? I will arrange professional support for you.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "damage"
+  },
+
+  "shipping_time": {
+    "desc": "shipping time",
+    "intent": "how long does shipping take delivery time shipping time delivery days",
+    "answer": "If shipped from local warehouse, it takes about 2–3 working days.\nIf shipped from China, it usually takes 7–10 working days depending on your country.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "tracking": {
+    "desc": "track order",
+    "intent": "where is my order tracking number how to track my order where is my package order status delivery status",
+    "answer": "You can check the tracking number on your order page. If you want, I can help you check it.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "tracking"
+  },
+
+  "not_work": {
+    "desc": "product not working",
+    "intent": "product not working not functioning cannot use device not turning on broken device no signal",
+    "answer": "Sorry about that. Could you please describe the issue or send a video so we can help you fix it?",
+    "jpg": [],
+    "mp4": [],
+    "alert": "tech_issue"
+  },
+
+  "tech_support": {
+    "desc": "technical support",
+    "intent": "technical support help troubleshooting problem with product how to fix",
+    "answer": "Our technical support team will help you. Please describe the problem in detail.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "tech_issue"
+  },
+
+  "install": {
+    "desc": "installation help",
+    "intent": "how to install installation help how do I set it up install guide setup instructions",
+    "answer": "We can provide installation instructions. Please tell us which product you need help installing.",
+    "jpg": ["install-0-UM-.jpg", "install-0-UM-simple.jpg", "install_step2.png"],
+    "mp4": ["install-0-UM-.mp4"],
+    "alert": ""
+  },
+
+  "return": {
+    "desc": "return request",
+    "intent": "can I return the item return policy exchange product return process",
+    "answer": "If the item has a problem, we can help you with return or replacement.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "refund"
+  },
+
+  "refund": {
+    "desc": "refund request",
+    "intent": "I want a refund money back refund request return money refund process",
+    "answer": "If there is a product issue, we can help arrange a refund or replacement.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "refund"
+  },
+
+  "cancel_order": {
+    "desc": "cancel order",
+    "intent": "cancel my order can I cancel before shipping cancel purchase order cancellation",
+    "answer": "If the order has not been shipped yet, we can help you cancel it.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "cancel"
+  },
+
+  "wrong_item": {
+    "desc": "wrong item received",
+    "intent": "I received wrong item incorrect product wrong package wrong order",
+    "answer": "Sorry for the mistake. Please send us a photo of the item you received.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "after_sale"
+  },
+
+  "missing_parts": {
+    "desc": "missing parts",
+    "intent": "missing parts incomplete package something missing in box missing items",
+    "answer": "Sorry for the inconvenience. Please let us know which parts are missing.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "after_sale"
+  },
+
+  "warranty": {
+    "desc": "warranty",
+    "intent": "warranty guarantee how long warranty coverage warranty policy",
+    "answer": "Our products come with warranty. Please tell us the issue and we will assist you.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "price": {
+    "desc": "price inquiry",
+    "intent": "how much is it price cost discount available price inquiry",
+    "answer": "The price is shown on the product page. If you have questions about pricing or discounts, please let us know.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "human": {
+    "desc": "request human agent",
+    "intent": "talk to human agent real person customer service representative",
+    "answer": "Please wait a moment. Our customer service will assist you shortly.",
+    "jpg": [],
+    "mp4": [],
+    "alert": "human"
+  },
+
+  "which_model": {
+    "desc": "model selection",
+    "intent": "which model is this what model should I choose product information model difference",
+    "answer": "Could you please tell me which product you are referring to? I will help you check the model.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+  "saudi_shipping": {
+    "desc": "Saudi shipping",
+    "intent": "can you ship to saudi arabia ksa customs saudi delivery riyadh warehouse",
+    "answer": "HWATEL Zbooster is the ONLY company with a Riyadh local warehouse. Shipping is fast and we deliver over 100 orders every week in Saudi Arabia.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+    },
+  "israel_customers": {
+    "desc": "Israel shipping",
+    "intent": "can you ship to israel customs israel shipping israel delivery",
+    "answer": "We ship about 30 parcels every week to Israel. We are one of the biggest suppliers in your country.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  },
+
+  "europe_customs": {
+    "desc": "Europe shipping",
+    "intent": "can you ship to europe customs europe delivery europe warehouse",
+    "answer": "HWATEL Zebooster is the ONLY company with a Europe local warehouse. You can receive your order in 3 days without customs or duties.",
+    "jpg": [],
+    "mp4": [],
+    "alert": ""
+  }
+}

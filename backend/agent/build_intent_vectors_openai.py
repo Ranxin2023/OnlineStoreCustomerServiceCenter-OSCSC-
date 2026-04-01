@@ -36,18 +36,31 @@ def main():
 
     for intent, item in answers.items():
 
-        # 🔥 关键：用 intent + 描述一起 embedding
-        text = item["intent"]
+        intents = item["intent"]
 
-        vector = get_embedding(text)
+        # 🔥 统一成 list（兼容你有些写成字符串的情况）
+        if isinstance(intents, str):
+            intents = [intents]
+
+        vectors = []
+
+        # 🔥 核心：每个句子单独 embedding
+        for phrase in intents:
+            phrase = phrase.strip()
+
+            if not phrase:
+                continue
+
+            vec = get_embedding(phrase)
+            vectors.append(vec)
 
         result[intent] = {
-            "intent": item["intent"],
+            "intent": intents,
             "answer": item["answer"],
-            "vector": vector
+            "vectors": vectors   # 🔥 注意：这里变成 vectors
         }
 
-        print(f"✅ encoded intent: {intent}")
+        print(f"✅ encoded intent: {intent} ({len(vectors)} phrases)")
 
     os.makedirs(os.path.dirname(VECTOR_PATH), exist_ok=True)
 
