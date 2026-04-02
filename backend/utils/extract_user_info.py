@@ -15,7 +15,7 @@ def extract_user_info(web_scrapy_model:Optional[WebScrapyModel])->Tuple[str]:
 
     # ✅ 等页面核心区域加载（关键）
     try:
-            wait.until(
+        wait.until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "[data-spm-anchor-id]")
                 )
@@ -36,12 +36,12 @@ def extract_user_info(web_scrapy_model:Optional[WebScrapyModel])->Tuple[str]:
     # ───── name: 直接用 class 精准定位 ─────
     # tag: <div class="user-name__3a8affc" data-spm-anchor-id="0.0.0.i3.xxx">
     try:
-            name_el = web_scrapy_model.find_element_by_css_selector(
+        name_el = web_scrapy_model.find_element_by_css_selector(
                 web_scrapy_model.driver,
                 "[class*='user-name__']"
-            )
-            name = name_el.text.strip()
-            print(f"[extract_user_info][DEBUG][name] found via class: {name}")
+        )
+        name = name_el.text.strip()
+        print(f"[extract_user_info][DEBUG][name] found via class: {name}")
     except Exception:
             # fallback: spm i3 兜底
             try:

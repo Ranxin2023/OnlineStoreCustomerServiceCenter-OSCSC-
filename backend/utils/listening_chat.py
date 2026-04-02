@@ -1,17 +1,47 @@
 from agent.rag.rag_reply import rag_reply
 from models.driver import Driver
-from constants.constant_values import  LOADING_TIME, SAFE_USERS
+from constants.constant_values import  ELEMENT_LOADING_TIME, LOADING_TIME, SAFE_USERS
 from models.web_scrapy_model import WebScrapyModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from typing import Dict
 from utils.extract_user_info import extract_user_info
-# from database.user_order_management import fetch_orders_by_username
 driver_model=Driver()
 
 def remove_non_bmp(text):
     return ''.join(c for c in text if ord(c) <= 0xFFFF)
+def send_video(driver, video_name):
+    try:
+        import os
+
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        video_path = os.path.join(
+            BASE_DIR,
+            "knowledge_base",
+            "mp4",
+            video_name
+        )
+
+        print(f"[send_video] path: {video_path}")
+
+        # 🔥 每次都重新找 input（关键）
+        file_input = WebDriverWait(driver, ELEMENT_LOADING_TIME).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[type='file']")
+            )
+        )
+
+        file_input.send_keys(video_path)
+
+        print("[send_video] success")
+        return True
+
+    except Exception as e:
+        print("[send_video] error:", e)
+        return False
 
 def send_image(driver, image_name):
     try:
@@ -75,155 +105,6 @@ def send_message(driver, reply):
         print("Reply error:", e)
         return False
                 
-# def listen_chat(driver, socketio, channel_id):
-#     print("[listen_chat] waiting for messages to load...")
-
-#     WebDriverWait(driver, PAGE_LOADING_TIME).until(
-#         EC.presence_of_element_located(
-#             (By.CSS_SELECTOR, "div.im-message-item")
-#         )
-#     )
-#     print("[listen_chat]Start chat listener")
-#     messages0 = driver.find_elements(
-#         By.CSS_SELECTOR,
-#         "div.im-message-item"
-#     )
-#     last_count = 0
-#     # print(f"[listen_chat]Type of messages is {type(messages0)}")
-
-#     for i in range(len(messages0) - 1, -1, -1):
-
-#         m = messages0[i]
-
-#         cls = m.get_attribute("class")
-
-#         print(f"[listen_chat] cls is {cls}")
-
-#         if "self" in cls:
-#             last_count = i + 1
-#             break
-
-#     # print(f"[listen_chat]Last seller is{last_count}")
-
-#     # round robin to fetch messages
-#     while True:
-#         messages = None
-#         try:
-
-#             messages = driver.find_elements(
-#                 By.CSS_SELECTOR,
-#                 "div.im-message-item"
-#             )
-#         except Exception as e:
-#             print(f"[listener] Driver crashed: {e}")
-
-#             try:
-#                 driver.quit()
-#             except Exception:
-#                 pass
-
-#             # 🔥 重新获取 driver
-#             driver = driver_model.get_driver(channel_id, driver_pool)
-
-#             print("[listener] Driver restarted")
-
-#             time.sleep(3)
-#             continue
-           
-#         count = len(messages)
-
-#         if count <= last_count:
-#             continue
-        
-#         new_messages = messages[last_count:]
-
-#         for m in new_messages:
-
-#             cls = m.get_attribute("class")
-
-#             sender = "buyer"
-
-#             if "self" in cls:
-#                     sender = "seller"
-#             message=None
-#             text = m.text.strip()
-#             if not text:
-#                 try:
-#                     img = m.find_element(By.CSS_SELECTOR, "img")
-#                     img_url = img.get_attribute("src")
-
-#                     message = {
-#                             "type": "image",
-#                             "content": img_url
-#                         }
-
-#                     print("📷 Image message:", img_url)
-
-#                 except Exception as e:
-#                     print(f"[listen_chat]Error in parsing images:{e}")
-#                     message = {
-#                         "type": "unknown",
-#                         "content": ""
-#                     }
-#             else:
-#                 message = {
-#                         "type": "text",
-#                         "content": text
-#                     }
-
-#                 print("💬 Text message:", text)
-#                 # print(f"[listen_chat]New message:{text}")
-#                 # print(f"[listen_chat]Type of the message is:{type(text)}")
-
-#             socketio.emit(
-#                 "chat_message",
-#                 {
-#                     "channelId": channel_id,
-#                     "sender": sender,
-#                     "message": text
-#                 }
-#             )
-                
-#             if sender != "buyer":
-#                 continue
-
-#             if message["type"] == "text":
-#                 user_text = message["content"].lower().strip()
-#                 print(f"[listen_chat] user text message is {user_text}")
-#                 # ===== 图片测试指令 =====
-#                 if user_text[0:6] in ['image1', 'image2', 'image3']:
-
-#                     image_name = f"{user_text[0:6]}.jpg"   # image1 -> image1.jpg
-
-#                     print(f"[listen_chat] Send test image: {image_name}")
-
-#                     send_image(driver, image_name)
-
-#                     continue  # ❗不要再走后面的回复逻辑
-
-#                 # ===== 正常回复 =====
-            
-#                 reply = rag_reply(message["content"])
-#                 reply = remove_non_bmp(reply)
-
-#                 success=send_message(driver, reply)
-#                 if not success:
-#                     print("[listen_chat] Failed to send message, skip...")
-#                     continue
-#             elif message["type"] == "image":
-#                 reply = "Thanks for the image. Could you please describe the issue?"
-
-#             else:
-#                 reply = "Let me check this for you."
-
-#             print("[listen_chat] Replying:", reply)
-
-            
-                
-#             last_count = count
-
-#         time.sleep(SWITCHING_TIME)
-
 def clean_message(text: str) -> str:
     if not text:
         return ""
@@ -252,128 +133,19 @@ def listen_chat(driver, socketio, channel_id):
 
     while True:
         try:
+
+            # ✅🔥 放在这里（第一行）
+            if not driver.session_id:
+                print("❌ driver 已断开，停止监听")
+                break
             sessions = driver.find_elements(By.CSS_SELECTOR, "div.im-session-item")
             if not sessions:
                 time.sleep(1)
                 print("No sessions found")
                 continue
-
-            for s in sessions:
-                try:
-                    # 👉 滚动
-                    driver.execute_script("arguments[0].scrollIntoView()", s)
-                    time.sleep(0.2)
-
-                    # 👉 先拿名字
-                    try:
-                        name = s.find_element(
-                            By.CSS_SELECTOR,
-                            "div.im-session-item-name-content b"
-                        ).text.strip()
-                    except Exception as e:
-                        print(f"Error in fetching user's name:{e}")
-                        continue
-
-                    print(f"[fetch users] name:{name}")
-                    # 👉 防重复点击
-                    if current_user != name:
-                        driver.execute_script("arguments[0].click()", s)
-                        time.sleep(0.5)
-                        current_user = name
-
-                    # 👉 获取用户信息
-                    user_name, star, country, remark, orders, order_status, \
-                    order_status_code, order_id, order_creation_date = extract_user_info(web_scrapy_model=web_model)
-
-                    if not user_name:
-                        continue
-
-                    print(f"\n👤 user: {user_name}")
-                    if user_name not in SAFE_USERS:
-                        print("Not safe Users")
-                        continue
-
-                    # 👉 获取消息
-                    messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
-                    count = len(messages)
-                    print(f"[listen_chat] length of new message is {count}")
-                    if not messages:
-                        continue
-
-                    # ✅ 新用户 → 跳过历史消息
-                    if user_name not in last_count_map:
-
-                        last_seller_index = 0
-
-                        for i in range(len(messages) - 1, -1, -1):
-                            cls = messages[i].get_attribute("class")
-
-                            if "self" in cls:   # seller
-                                last_seller_index = i + 1
-                                break
-
-                        last_count_map[user_name] = last_seller_index
-
-                        print(f"[INIT] Start from last seller index: {last_seller_index}")
-                        continue
-
-                    # ✅ 没新消息 → 跳过
-                    if count <= last_count_map[user_name]:
-                        print("Skip for no new message")
-                        continue
-
-                    # ✅ 获取新消息
-                    new_messages = messages[last_count_map[user_name]:]
-
-                    buyer_texts = []
-
-                    for m in new_messages:
-                        text = clean_message(m.text.strip())
-                        cls = m.get_attribute("class")
-                        sender = "seller" if "self" in cls else "buyer"
-
-                        socketio.emit(
-                            "chat_message",
-                            {
-                                "channelId": channel_id,
-                                "sender": sender,
-                                "message": text
-                            }
-                        )
-
-                        if sender == "buyer" and text:
-                            buyer_texts.append(text)
-
-                    # ✅ 合并消息回复
-                    if buyer_texts:
-                        combined_text = " ".join(buyer_texts)
-
-                        print(f"🧠 Combined: {combined_text}")
-
-                        result = rag_reply(combined_text, user_name)
-
-                        send_message(driver, result["answer"])
-
-                        for img in result["jpg"]:
-                            send_image(driver, img)
-
-                        for v in result["mp4"]:
-                            send_image(driver, v)
-
-                        if result["alert"]:
-                            socketio.emit("alert_message", {
-                                "channelId": channel_id,
-                                "alert": result["alert"]
-                            })
-
-                    # ✅ 更新计数（必须在最后）
-                    last_count_map[user_name] = count
-
-                    time.sleep(0.3)
-
-                except Exception as e:
-                    print("[listen_chat] user error:", e)
-                    continue
+            current_user=traverse_sessions(sessions=sessions, driver=driver, last_count_map=last_count_map, 
+                              socketio=socketio, channel_id=channel_id,current_user=current_user, web_model=web_model)
+            
 
         except Exception as e:
             print("[listen_chat] main error:", e)
@@ -382,52 +154,121 @@ def listen_chat(driver, socketio, channel_id):
 
             time.sleep(1)
         
-def listen_chat_with_user(driver, socketio, channel_id, user_name):
-
-    print(f"[chat] Start listener for user: {user_name}")
-
-    last_count = 0
-
-    while True:
-
+def traverse_sessions(sessions, driver, last_count_map:Dict[str, int], 
+                      socketio, channel_id:str, current_user, web_model:WebScrapyModel)->str:
+    for s in sessions:
         try:
-            messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
-            count = len(messages)
+            # 👉 滚动
+            driver.execute_script("arguments[0].scrollIntoView()", s)
+            time.sleep(0.2)
 
-            if count <= last_count:
-                time.sleep(2)
+                    # 👉 先拿名字
+            try:
+                name = s.find_element(
+                    By.CSS_SELECTOR,
+                    "div.im-session-item-name-content b"
+                ).text.strip()
+            except Exception as e:
+                print(f"Error in fetching user's name:{e}")
                 continue
 
-            new_messages = messages[last_count:]
+            print(f"[fetch users] name:{name}")
+            # 👉 防重复点击
+            if current_user != name:
+                driver.execute_script("arguments[0].click()", s)
+                time.sleep(0.5)
+                current_user = name
+
+                    # 👉 获取用户信息
+            user_name, star, country, remark, orders, order_status, \
+                    order_status_code, order_id, order_creation_date = extract_user_info(web_scrapy_model=web_model)
+
+            if not user_name:
+                        continue
+
+            print(f"\n👤 user: {user_name}")
+            if user_name not in SAFE_USERS:
+                print("Not safe Users")
+                continue
+
+            # 👉 获取消息
+            messages = driver.find_elements(By.CSS_SELECTOR, "div.im-message-item")
+            count = len(messages)
+            print(f"[listen_chat] length of new message is {count}")
+            if not messages:
+                continue
+
+            # ✅ 新用户 → 跳过历史消息
+            if user_name not in last_count_map:
+
+                last_seller_index = 0
+
+                for i in range(len(messages) - 1, -1, -1):
+                    cls = messages[i].get_attribute("class")
+
+                    if "self" in cls:   # seller
+                        last_seller_index = i + 1
+                        break
+
+                last_count_map[user_name] = last_seller_index
+
+                print(f"[INIT] Start from last seller index: {last_seller_index}")
+                continue
+
+            # ✅ 没新消息 → 跳过
+            if count <= last_count_map[user_name]:
+                print("Skip for no new message")
+                continue
+
+            # ✅ 获取新消息
+            new_messages = messages[last_count_map[user_name]:]
+
+            buyer_texts = []
 
             for m in new_messages:
-
+                text = clean_message(m.text.strip())
                 cls = m.get_attribute("class")
                 sender = "seller" if "self" in cls else "buyer"
 
-                text = m.text.strip()
+                socketio.emit(
+                    "chat_message",
+                        {
+                            "channelId": channel_id,
+                            "sender": sender,
+                            "message": text
+                        }
+                    )
 
-                if not text:
-                    continue
+                if sender == "buyer" and text:
+                    buyer_texts.append(text)
 
-                print(f"[chat] {sender}: {text}")
+            # ✅ 合并消息回复
+            if buyer_texts:
+                combined_text = " ".join(buyer_texts)
 
-                # =========================
-                # 🔥 只处理 buyer 消息
-                # =========================
-                if sender != "buyer":
-                    continue
+                print(f"🧠 Combined: {combined_text}")
 
-                # =========================
-                # 🔥 生成回复（升级版）
-                # =========================
-                reply = rag_reply(query=messages["content"], user_name=user_name)
+                result = rag_reply(combined_text, user_name)
 
-                send_message(driver, reply)
+                send_message(driver, result["answer"])
 
-            last_count = count
+                for img in result["jpg"]:
+                    send_image(driver, img)
 
+                for v in result["mp4"]:
+                    send_video(driver, v)
+
+                if result["alert"]:
+                    socketio.emit("alert_message", {
+                        "channelId": channel_id,
+                        "alert": result["alert"]
+                    })
+
+            # ✅ 更新计数（必须在最后）
+            last_count_map[user_name] = count
+
+            time.sleep(0.3)
         except Exception as e:
-            print("[chat] error:", e)
-
-        time.sleep(2)
+            print("[listen_chat] user error:", e)
+            raise
+        return current_user

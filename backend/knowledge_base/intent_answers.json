@@ -1,5 +1,6 @@
 {
-    "hi": {
+    "hi": 
+        {
         "desc": "greeting",
         "intent": [ 
                     "hi",
@@ -17,135 +18,161 @@
         "alert": ""
     },
 
-    "thank": {
+    "thank": 
+        {
         "intent": 
-                [
-                    "thank you",
-                    "thanks",
-                    "thx",
-                    "appreciate it"
-                ],
+            [
+				"thank you",
+				"thanks",
+				"thx",
+				"have a nice day",
+				"appreciate it"
+            ],
         "answer": "Thanks again for supporting HWATEL Zbooster. If you have any question or need help, we are here!",
-            "jpg":[],
-            "mp4":[],
-            "alert":""		
+        "jpg":[],
+        "mp4":[],
+        "alert":""		
     },
-    "when_arrive": {
+
+    "when_arrive": 
+        {
         "intent": 
                 [
-                    "when will it arrive",
-                    "when delivery",
-                    "time to arrive",
-                    "arrival time",
-                    "arrival estimate",
-                    "how long does shipping take",
-                    "how long does it take",
-                    "how long to receive",
-                    "how long shipping",
-                    "how many days delivery",
-                    "how fast shipping",
-                    "delivery time",
-                    "delivery days?",
-                    "delivery period",
-                    "delivery schedule",
-                    "shipping time",
-                    "ship time",
-                    "shipping duration",
-                    "delivery estimate",
-                    "expected delivery",
-                    "shipping speed"
+				"when will it arrive",
+				"when delivery",
+				"time to arrive",
+				"arrival time",
+				"arrival estimate",
+
+				"how long does shipping take",
+				"how long does it take",
+				"how long to receive",
+				"how long shipping",
+				"how many days delivery",
+				"how fast shipping",
+
+				"delivery time",
+				"delivery days?",
+				"delivery period",
+				"delivery schedule",
+				"shipping time",
+				"ship time",
+				"shipping duration",
+				"delivery estimate",
+				"expected delivery",
+				"shipping speed"
                 ],
         "answer": "If ship from local warehouse need about 2~3 workdays. \n  If ship from china normaly 7-10 workdays depending on your country.",
         "jpg": [],
         "mp4":  [],
         "alert": ""
     },
-    "damage": {
-        "desc": "product damaged",
-        "intent": ["item arrived damaged broken defective dirty"],
+
+    "damage": 
+        {
+	    "desc": "损坏: 安抚+通知售后经理",
+        "intent": 
+			[
+				"item arrived damaged",
+				"received damaged item",
+				"box damaged",
+				"damaged package",
+				"damaged goods",
+				"damaged delivery",
+				"item defective",
+
+			  "item arrived broken",
+				"product is broken",
+				"it arrived broken",
+				"item broken on arrival",
+				"broken device",
+
+				"bad condition",
+				"product not in good condition",
+				"item scratched",
+				"product cracked",
+				"dirty"
+			],
         "answer": "I feel so sorry. Could you please send us a photo including bar code? I will arrange professional support for you.",
         "jpg": [],
         "mp4": [],
         "alert": "damage"
     },
 
-    "shipping_time": {
-        "desc": "shipping time",
-        "intent": "how long does shipping take delivery time shipping time delivery days",
-        "answer": "If shipped from local warehouse, it takes about 2–3 working days.\nIf shipped from China, it usually takes 7–10 working days depending on your country.",
-        "jpg": [],
-        "mp4": [],
-        "alert": ""
+
+   "tracking": 
+        {
+        "desc": "查询回复:查询物流记录表, 没查到: 说明是Ali系统物流,只需通知: You can check the tracking number in your order page. If you want I can help you check it.;  查询物流记录表, 查到了:沙特线下, 以色列线下, 美国线下, 澳大利亚线下, 菲律宾线下... # 物流查询API:  每天自动执行, 更新一次;目前暂时做成手动; 表格如下: 订单号    买家      备注1      备注2:第1包跟踪记录    备注3:第2包跟踪记录   备注4:第3包跟踪记录   拷屏文件1   拷屏文件2    拷屏文件3 .  发送: 备注1+备注2+备注3+备注4, 发送: 文件1- 文件2 文件3 文件4 ", 
+        "intent": 
+		    [
+			"where is my order",
+			"tracking number",
+			"how to track my order",
+			"I want to enquire about my order",
+			"track my order",
+			"tracking number please",
+			"can you check my shipment",
+			"where is my package",
+			"tracking info",
+			"track parcel",
+			"check shipping status",
+			"tracking not working",
+			"tracking no update",
+			"shipment tracking",
+			"where is shipment",
+			"parcel location",
+			"track my package",
+			"send tracking number",
+			"order tracking help",
+			"tracking code please",
+			"where is item now",
+			"shipment status",
+			"tracking problem"
+		    ],
+        "answer": "Do not worry at all. Your order is on the way. Just have a cup of coffee. ",
+		"jpg":[] ,
+		"mp4": [],
+		"alert": "If fail send order ID"		
     },
 
-    "tracking": {
-        "desc": "track order",
-        "intent":[
-                "where is my order",
-                "tracking number",
-                "how to track my order",
-                "I want to enquire about my order",
-                "where is my order",
-                "track my order",
-                "tracking number please",
-                "can you check my shipment",
-                "where is my package",
-                "tracking info",
-                "track parcel",
-                "check shipping status",
-                "tracking not working",
-                "tracking no update",
-                "shipment tracking",
-                "where is shipment",
-                "parcel location",
-                "track my package",
-                "send tracking number",
-                "order tracking help",
-                "tracking code please",
-                "where is item now",
-                "shipment status",
-                "tracking problem"
-            ],
-        "answer": "You can check the tracking number on your order page. If you want, I can help you check it.",
-        "jpg": [],
-        "mp4": [],
-        "alert": "tracking"
-    },
+    "not_work": 
+        {
+	    "desc": "安抚--通知售后",
+        "intent": 
+			[
+				"system not working",
+				"booster not working",
+				"product not working",
+				"not working properly",
+				"it does not work",
+				"not functioning",
+				"not use",
+				"no use",
+				"cannot use",
+				"not usable",
+				"cannot connect",
+				"no effect",
+				"it doesn't function",
+				"stopped working",
+				"stop work",
+				"no change",
+				"not powering on",
+				"device not turning on",
+				"doesn't turn on",
+				"it fails to start",
+				"no power",
+				"device issue",
+				"problem with device"			
+			],
+        "answer": "I will send professional serve you. \n Now, could you please describe the problem in detail. \n Actually,Normally two reasons:\n    A-Signal frequency arround your does NOT match with booster;\n    B- Source signal is too weak. \n To avoid any mistake, you have to measure signal level and frequency. Step 1- Download APP Cellular-Z or Network Cell Info Lite; Step 2- Go OUT of your house to the position you want install antenna;Step 3- Measure signal with cellular-Z, copy screen to me. Our engineer will analyse your measurement result.",
+	    "jpg":[],
+	    "mp4": [],
+	    "alert": "Not Work! Order ID: "
+        },
+  
 
-    "not_work": {
-        "desc": "product not working",
-        "intent": [
-                    "system not working",
-                    "booster not working",
-                    "product not working",
-                    "not working properly",
-                    "it does not work",
-                    "not functioning",
-                    "not use",
-                    "no use",
-                    "cannot use",
-                    "not usable",
-                    "cannot connect",
-                    "no effect",
-                    "it doesn't function",
-                    "stopped working",
-                    "stop work",
-                    "no change",
-                    "not powering on",
-                    "device not turning on",
-                    "doesn't turn on",
-                    "it fails to start",
-                    "no power",
-                    "device issue",
-                    "problem with device"			
-                ],
-        "answer": "Sorry about that. Could you please describe the issue or send a video so we can help you fix it?",
-        "jpg": [],
-        "mp4": [],
-        "alert": "tech_issue"
-    },
-
-    "tech_support": {
+    "tech_support": 
+        {
         "desc": "technical support",
         "intent": [
                     "technical support",
@@ -156,9 +183,10 @@
         "jpg": [],
         "mp4": [],
         "alert": "tech_issue"
-    },
+        },
 
-    "install": {
+    "install": 
+        {
         "desc": "installation help",
         "intent": [
                     "help me install",
@@ -170,148 +198,148 @@
                     "the instructions"
                 ],
         "answer": "Of course, here are Installation Video, Fast Install Instruction and User Manual.",
-        "jpg": ["install-0-UM-.jpg", "install-0-UM-simple.jpg", "install_step2.png"],
+        "jpg": ["install-0-UM-.jpg", "install-0-UM-simple.png", "install-step1.png"],
         "mp4": ["install-0-UM-.mp4"],
         "alert": ""
     },
 
-    "return": {
-        "desc": "return request",
-        "intent": "can I return the item return policy exchange product return process",
-        "answer": "If the item has a problem, we can help you with return or replacement.",
-        "jpg": [],
-        "mp4": [],
-        "alert": "refund"
-    },
-
-    "refund": {
-        "desc": "refund request",
-        "intent": [
-                "I want a refund",
-                "I need refund",
-                "need refund now",
-                "can you refund me",
-                "how to get refund",
-                "refund my order",
-                "refund request",
+    "refund": 
+    {
+            "desc": "return or refund request, need provide evidence, 目前暂时通过OPEN CLAW发 Whatsapp ",
+            "intent": [
+                "refund",
                 "refund please",
-                "refund process",
-                "refund issue",
-                "can I return for refund",
-                "refund processing?",
-                "refund help",
-                "return and refund",
-
-                "I want my money back",
-                "give me my money back",
-                "money back please",
-                "return money",
-
-                "I want to return the item",
-                "how to return item",
-                "I need to return my order",
-                "need return",
-                "can I return the item",
-                "return policy",
-                "return process please",
-                "return request",
-                "how do I return this",
-                "wrong purchase want return",
-                "how long to return",
-                "return shipping how",
-
-                "I want to send it back",
-                "send back product",
-                "how to send it back",
-                "I don,t want this anymore",
-                "can I exchange product",
-                "can I exchange it",
-                "exchange product",
-                "can I get replacement"
+                "I want a refund",
+                "money back",
+                "return item",
+                "refund my order",
+                "I don't want this anymore",
+                "can I get a refund"
                 ],
-        "answer": "If there is a product issue, we can help arrange a refund or replacement.",
-        "jpg": [],
-        "mp4": [],
-        "alert": "refund"
+            "answer": "Ok. I will send professional serve you.",
+            "jpg":[],
+            "mp4": [],
+            "alert": "Refund alert! Order ID: "
     },
 
-    "cancel_order": {
-        "desc": "cancel order",
-        "intent": [
-                "cancel my order",
-                "I want to cancel",
-                "can I cancel order",
-                "cancel purchase",
-                "stop my order",
-                "cancel it please",
-                "I don't want it anymore",
-                "cancel before shipping",
-                "how to cancel order",
-                "cancel request",
-                "please cancel",
-                "order cancellation",
-                "cancel shipment",
-                "stop delivery",
-                "abort order",
-                "cancel transaction",
-                "cancel order now",
-                "undo purchase",
-                "cancel payment",
-                "order cancel help"
+    "cancel_order": 
+        {
+        "desc": "取消订单:发货前",
+        "intent": 
+            [
+			"cancel my order",
+			"I want to cancel",
+			"can I cancel order",
+			"cancel purchase",
+			"stop my order",
+			"cancel it please",
+			"I do not want it anymore",
+			"cancel before shipping",
+			"how to cancel order",
+			"cancel request",
+			"please cancel",
+			"order cancellation",
+			"cancel shipment",
+			"stop delivery",
+			"abort order",
+			"cancel transaction",
+			"cancel order now",
+			"undo purchase",
+			"cancel payment",
+			"order cancel help"
             ],
         "answer": "If the order has not been shipped yet, we can help you cancel it.",
         "jpg": [],
         "mp4": [],
-        "alert": "cancel"
+        "alert": "取消了订单,紧急截停, 订单号: "
     },
 
-    "wrong_item": {
-        "desc": "wrong item received",
-        "intent": [
-                    "wrong item received",
-                    "incorrect product",
-                    "not what I ordered",
-                    "you sent wrong item",
-                    "wrong package",
-                    "different product",
-                    "item mismatch",
-                    "wrong model",
-                    "wrong color",
-                    "not correct item",
-                    "received wrong goods",
-                    "product not correct",
-                    "item different",
-                    "wrong version",
-                    "order mistake",
-                    "shipment wrong",
-                    "wrong delivery",
-                    "item not match",
-                    "wrong order",
-                    "incorrect shipment"
-                ],
+    "wrong_item": 
+        {
+ 	    "desc": "发错货: 安抚+通知售后经理",
+        "intent": 
+			[
+				"wrong item received",
+				"incorrect product",
+				"not what I ordered",
+				"you sent wrong item",
+				"wrong package",
+				"different product",
+				"item mismatch",
+				"wrong model",
+				"wrong color",
+				"not correct item",
+				"received wrong goods",
+				"product not correct",
+				"item different",
+				"wrong version",
+				"order mistake",
+				"shipment wrong",
+				"wrong delivery",
+				"item not match",
+				"wrong order",
+				"incorrect shipment"
+			],
         "answer": "I'm really sorry to hear that. Please send a photo including barcode. We will take care of this and resolve it quickly.",
-        "jpg": [],
-        "mp4": [],
-        "alert": "Alert:发错货! Order ID: "
+	    "jpg":[],
+	    "mp4": [],
+	    "alert": "Alert:发错货! Order ID: "
     },
 
-    "missing_parts": {
-        "desc": "missing parts",
-        "intent": ["missing parts incomplete package something missing in box missing items"],
-        "answer": "Sorry for the inconvenience. Please let us know which parts are missing.",
-        "jpg": [],
-        "mp4": [],
-        "alert": "after_sale"
-    },
+    "missing_parts": 
+        {
+		"desc": "运输丢失短装: 安抚+通知售后经理",
+		"intent": 
+			[	
+				"missing parts",
+				"missing items",
+				"missing piece",
+				"missing equipment",
+				"items missing",
+				"missing accessories",
+				"missing cable",
+				"missing antenna",
+				"missing components",
+				"package missing items",
+				"something missing",
+				"some parts missing",
+				"not the full set",
+				"i only receive one part",
+				"I ordered the product with accessories, but only the device arrived.",
+				"please send other parts as soon as possible.",
+				"i still didn't receive my shipment",
+				"every time shipment company goes to wrong addres",
+				"incomplete package",
+				"item incomplete",
+				"box incomplete",
+				"incomplete order",
+				"only one part box i received ",
+				"parts not included",
+				"not all parts included",
+				"not full package",
+				"cable bracket not in package"
+			],
+        "answer": "I'm really sorry to hear that. Please send a photo of the parcel including the barcode. We will take care of this and resolve it quickly.",
+		"jpg": [],
+		"mp4": [],
+		"alert": "Alert: 货丢失! Order ID: "
+   },
 
-    "warranty": {
+    "warranty": 
+        {
         "desc": "warranty",
-        "intent": ["warranty guarantee how long warranty coverage warranty policy"],
+        "intent": 
+            [
+                 "warranty",
+                "warranty policy",
+                "how long warranty",
+                "warranty coverage"
+            ],
         "answer": "Our products come with warranty. Please tell us the issue and we will assist you.",
         "jpg": [],
         "mp4": [],
         "alert": ""
-    },
+        },
 
     "discount": {
         "intent": ["how much is it price cost discount available"],
@@ -332,18 +360,24 @@
 
     "which_model": {
         "desc": "model selection",
-        "intent": ["which model is this what model should I choose product information model difference"],
+        "intent": [
+             "which model is this",
+            "what model should I choose",
+            "model difference",
+            "product model info"
+        ],
         "answer": "Could you please tell me which product you are referring to? I will help you check the model.",
         "jpg": [],
         "mp4": [],
         "alert": ""
     },
+    
     "KSA_Market": {
         "intent": 
                 [
                     "Can you ship to Saudi Arabia?",
                     "clear KSA customs?",
-                    "Saudi Arabuia customs gurantee?",
+                    "Saudi Arabia customs guarantee?",
                     "KSA no problem",
                     "Can you clear Saudi Arabia KSA Customs? "
                 ],
@@ -352,6 +386,7 @@
         "mp4":  [],
         "alert":""
     },
+
     "Israel_Market": {
         "intent": 
                 [
@@ -364,7 +399,8 @@
         "alert":""
     },
 
-    "Europe_Warehouse": {
+    "Europe_Warehouse": 
+        {
         "intent": 
                 [
                     "Can you ship to Europe? ",
@@ -376,8 +412,9 @@
 		"alert":""
 	},
 		
-    "distance": {
-		"Desc":"",
+    "distance": 
+        {
+		"Desc":"覆盖面积",
         "intent":
 			[
 				"How Far to the tower",
@@ -388,7 +425,9 @@
 		"mp4": [],
 		"alert":""
 	},
-    "refund_trace": {
+
+    "refund_trace": 
+        {
         "intent": 
 			[
 				"where is my refund",
@@ -401,5 +440,34 @@
 		"jpg": [],
 		"mp4": [],		
 		"alert":""
-	}
+	},
+
+    "How_booster_work": 
+        {
+	    "Desc":"",
+        "intent": 
+			[
+				"How booster work",
+				"What is booster work",
+				"Principle of booster"
+			],
+        "answer": "like below",
+	    "jpg": ["ABC-How booster work.jpg"],
+	    "mp4": [],
+	    "alert":[]
+        },
+	
+	"How_Big_Area": 
+        {
+	    "Desc":"",
+        "intent": 
+			[
+				"How Far will it cover",
+				"How Big area"
+			],
+        "answer": "  Normally, 70dB booster can cover 150 sqm about one house. \n 80dB version is suitable for two floor house. \n 85dB version is suitable for about 1000 sqm.",
+	    "jpg":[],
+	    "mp4": [],
+	    "alert":""
+    }
 }
