@@ -50,3 +50,19 @@ def fetch_country_from_users(user_name:str):
 
     # 提取 orders 字段
     return [row[0] for row in rows]
+
+def fetch_vip_status_from_users(user_name:str):
+    conn = get_connection()
+    cursor = conn.cursor()
+    sql = """
+    SELECT vip FROM users
+    WHERE user_name = ?
+    """
+
+    cursor.execute(sql, (user_name,))
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    # 提取 vip 字段
+    return [row[0] for row in rows]

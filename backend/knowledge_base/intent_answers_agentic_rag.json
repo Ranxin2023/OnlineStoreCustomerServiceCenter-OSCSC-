@@ -1,0 +1,58 @@
+{
+"hi": {
+"type": "faq",
+"intent": ["hi", "hello", "hey"],
+"answer": "Hello! Welcome to our store. How can I help you today?",
+"jpg": [],
+"mp4": [],
+"alert": ""
+},
+
+"tracking": {
+"type": "tool",
+"intent": [
+"where is my order",
+"track my order",
+"order status",
+"where is my package"
+],
+"tool": "check_order_status"
+},
+
+"refund": {
+"type": "tool",
+"intent": [
+"refund",
+"I want a refund",
+"money back",
+"return item"
+],
+"tool": "refund_flow"
+},
+
+"damage": {
+"type": "faq",
+"intent": [
+"damaged",
+"broken",
+"defective"
+],
+"answer": "Sorry about that. Please send us a photo including the barcode so we can assist you quickly.",
+"jpg": [],
+"mp4": [],
+"alert": "damage"
+},
+
+"install": {
+"type": "faq",
+"intent": [
+"install",
+"how to install",
+"setup"
+],
+"answer": "Here is the installation guide for your product.",
+"jpg": ["install_step.png"],
+"mp4": ["install_video.mp4"],
+"alert": ""
+}
+}

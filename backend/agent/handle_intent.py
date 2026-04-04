@@ -37,6 +37,43 @@ intent_vectors = {
 def cosine(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
+# # ------------------------------
+# # detect intent (🔥核心函数)
+# # ------------------------------
+# def detect_intent(message, threshold=0.5):
+
+#     msg = message.lower().strip()
+#     is_short = len(msg.split()) <= 3
+
+#     query_vec = get_embedding(msg)
+
+#     best_intent = None
+#     best_score = 0
+
+#     for intent, vectors in intent_vectors.items():
+
+#         for vec in vectors:   # 🔥 遍历每个子intent
+#             score = cosine(query_vec, vec)
+
+#             if score > best_score:
+#                 best_score = score
+#                 best_intent = intent
+
+#     print(f"[intent] best={best_intent}, score={best_score}")
+
+#     dynamic_threshold = threshold + 0.05 if not is_short else threshold
+
+#     if best_score > dynamic_threshold:
+#         return {
+#             "intent": best_intent,
+#             "score": best_score
+#         }
+
+#     return {
+#         "intent": None,
+#         "score": best_score
+#     }
+
 # ------------------------------
 # detect intent (🔥核心函数)
 # ------------------------------
@@ -63,17 +100,24 @@ def detect_intent(message, threshold=0.5):
 
     dynamic_threshold = threshold + 0.05 if not is_short else threshold
 
+    # ✅ 命中 intent
     if best_score > dynamic_threshold:
+        config = INTENT_ANSWERS.get(best_intent)
+
+        print(f"[intent] config={config}")   # 🔥调试用（强烈建议保留）
+
         return {
             "intent": best_intent,
-            "score": best_score
+            "score": best_score,
+            "config": config   # 🔥新增
         }
 
+    # ❌ 未命中
     return {
         "intent": None,
-        "score": best_score
+        "score": best_score,
+        "config": None   # 🔥一定要加，避免后面报错
     }
-
 # ------------------------------
 # generate reply（只负责输出）
 # ------------------------------
