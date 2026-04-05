@@ -7,6 +7,7 @@ from langchain_community.vectorstores import Chroma
 from openai import OpenAI
 from database.user_management import fetch_vip_status_from_users
 import os
+from yanwei_apis.check_order_status import check_order_status
 
 load_dotenv()
 
@@ -183,10 +184,10 @@ def rag_search_and_generate(query):
             "alert": ""
         }
     
-def check_order_status():
-    print("checking order status")
+# def check_order_status(vip_info: str):
+#     print("checking order status")
 
-def refund_logic():
+def refund_logic(vip_info: str):
     print("refunding")
 
 def rag_reply(query, user_name):
@@ -215,6 +216,7 @@ def rag_reply(query, user_name):
     # 🔴 CASE 2: TOOL（核心🔥）
     # =========================
     if intent and config["type"] == "tool":
+        print("calling tools......")
 
         tool_name = config["tool"]
 
@@ -228,7 +230,7 @@ def rag_reply(query, user_name):
             result = "Sorry, I cannot handle this request yet."
 
         # 👉 VIP逻辑（🔥关键）
-        if vip_info["star"] == "VIP":
+        if vip_info:
             result = "Dear VIP customer, " + result
 
         return {

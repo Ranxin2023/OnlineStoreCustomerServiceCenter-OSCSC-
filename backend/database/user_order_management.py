@@ -1,4 +1,4 @@
-from database.db_management import get_connection
+from database.db_management import get_connection, fetch_by_key
 
 def save_user_orders(user_name, orders, order_id, status, status_code, order_time):
     conn = get_connection()
@@ -18,17 +18,4 @@ def save_user_orders(user_name, orders, order_id, status, status_code, order_tim
 
 
 def fetch_orders_by_username(user_name:str):
-    conn = get_connection()
-    cursor = conn.cursor()
-    sql = """
-    SELECT orders FROM user_orders
-    WHERE user_name = ?
-    """
-
-    cursor.execute(sql, (user_name,))
-    rows = cursor.fetchall()
-
-    conn.close()
-
-    # 提取 orders 字段
-    return [row[0] for row in rows]
+    return fetch_by_key(schema_name=["orders"], table_name="user_orders", key="user_name", value=user_name)

@@ -1,110 +1,64 @@
 import sqlite3
 import os
-from datetime import datetime
+from typing import List
 DB_PATH = os.path.join(os.path.dirname(__file__), "orders.db")
 
-
+ALLOWED_TABLES = {"yanwen_orders", "users", "orders", "user_orders", "sqlite_sequence"}
+ALLOWED_COLUMNS = {"yanwen_orders":["tracking_number", "last_status", "buyer_id"],
+                   "users":["id", "channel_id", "name", "star", "country", "remark", "last_message", "last_sender", "updated_at", "vip"],
+                   "user_orders":["id", "channel_id","status", "created_at", "channel_id", "order_creation_date", "status_code", "orders", "user_name"]}
 def get_connection():
     return sqlite3.connect(DB_PATH)
 
+def fetch_by_key(
+    table_name: str,
+    schema_names: List[str],
+    key: str,
+    value: str,
+    order_by: str = None,   # 🔥 新增
+    desc: bool = False,     # 🔥 新增
+    limit: int = None       # 🔥 新增
+):
+    if table_name not in ALLOWED_TABLES:
+        raise ValueError("Invalid table")
 
-def init_db():
+    for col in schema_names:
+        if col not in ALLOWED_COLUMNS[table_name]:
+            raise ValueError(f"Invalid column: {col}")
+
+    if key not in ALLOWED_COLUMNS[table_name]:
+        raise ValueError("Invalid key column")
+
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS orders (
-            order_id TEXT PRIMARY KEY,
-            store TEXT,
-            order_link TEXT,
-            date TEXT,
-            buyer TEXT,
-            product TEXT,
-            specs TEXT,
-            sku TEXT,
-            price TEXT,
-            qty INTEGER,
-            amount TEXT,
-            status TEXT,
-            status_en TEXT,
-            ae_ioss TEXT,
-            semi_managed TEXT,
-            action TEXT,
-            recipient TEXT,
-            address TEXT,
-            country TEXT, 
-            postal_code TEXT,
-            email TEXT,
-            phone TEXT,
-            tax_number TEXT, 
-            short_address TEXT
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_id TEXT,
+    columns_str = ", ".join(schema_names)
 
-            name TEXT,           -- 用户名
-            star TEXT,           -- 星标（无星标 / ⭐1 / ⭐2...）
-            country TEXT,        -- 国家
-            remark TEXT,         -- 备注
+    sql = f"""
+    SELECT {columns_str}
+    FROM {table_name}
+    WHERE {key} = ?
+    """
 
-            last_message TEXT,
-            last_sender TEXT,
+    # 👉 ORDER BY
+    if order_by:
+        if order_by not in ALLOWED_COLUMNS[table_name]:
+            raise ValueError("Invalid order_by column")
 
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        sql += f" ORDER BY {order_by}"
+        if desc:
+            sql += " DESC"
 
-            UNIQUE(channel_id, name)
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_orders (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            order_id VARCHAR(50) UNIQUE,
-            status VARCHAR(50),
-            created_at DATETIME,
-            channel_id VARCHAR(20),
-            created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            status_code INT DEFAULT -1
-        );
-    """)
-    conn.commit()
-    conn.close()
+    # 👉 LIMIT
+    if limit:
+        sql += f" LIMIT {limit}"
 
-
-
-def get_last_commit_time(store):
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT last_commit_time FROM sync_state WHERE store=?",
-        (store,)
-    )
-
+    cursor.execute(sql, (value,))
     row = cursor.fetchone()
+
     conn.close()
 
-    if row:
-        return row[0]
+    if not row:
+        return None
 
-    return None
-
-def update_commit_time(store):
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute("""
-        INSERT OR REPLACE INTO sync_state (store, last_commit_time)
-        VALUES (?,?)
-    """, (store, now))
-
-    conn.commit()
-    conn.close()
-
-    return now
+    return dict(zip(schema_names, row))

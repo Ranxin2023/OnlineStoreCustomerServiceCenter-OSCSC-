@@ -1,6 +1,5 @@
 
-from database.db_management import get_connection
-
+from database.db_management import get_connection,fetch_by_key
 
 def save_or_update_user(
     channel_id,
@@ -36,33 +35,7 @@ def save_or_update_user(
 
 
 def fetch_country_from_users(user_name:str):
-    conn = get_connection()
-    cursor = conn.cursor()
-    sql = """
-    SELECT country FROM users
-    WHERE user_name = ?
-    """
-
-    cursor.execute(sql, (user_name,))
-    rows = cursor.fetchall()
-
-    conn.close()
-
-    # 提取 orders 字段
-    return [row[0] for row in rows]
+    return fetch_by_key(schema_name=["country"], table_name="users",key="name", value=user_name)
 
 def fetch_vip_status_from_users(user_name:str):
-    conn = get_connection()
-    cursor = conn.cursor()
-    sql = """
-    SELECT vip FROM users
-    WHERE user_name = ?
-    """
-
-    cursor.execute(sql, (user_name,))
-    rows = cursor.fetchall()
-
-    conn.close()
-
-    # 提取 vip 字段
-    return [row[0] for row in rows]
+    return fetch_by_key(schema_name=["vip"], table_name="users",key="name", value=user_name)
