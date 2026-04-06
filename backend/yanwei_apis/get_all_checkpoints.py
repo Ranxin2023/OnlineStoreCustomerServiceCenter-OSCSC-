@@ -33,35 +33,22 @@ def query_yanwen_tracking(tracking_number, auth_token):
 
 def get_all_checkpoints(tracking_number, auth_token):
     info = query_yanwen_tracking(tracking_number, auth_token)
-    # print(f"[get_all_checkpoints]result fetched from yanwen:\n{info}")
-    exchange_number=info.get("exchange_number")
-    if not info:
-        return []
 
+    if not info:
+        return None
+
+    # 👉 拿原始 checkpoints
     checkpoints = info.get("checkpoints", [])
 
-    # 按时间排序（最新在前）
+    # 👉 排序（最新在前）
     checkpoints_sorted = sorted(
         checkpoints,
         key=lambda x: x["time_stamp"],
         reverse=True
     )
 
-    return exchange_number, checkpoints_sorted
+    # 👉 🔥关键：覆盖原始 data 里的 checkpoints（但整体结构不变）
+    info["checkpoints"] = checkpoints_sorted
 
-def print_tracking(tracking_number, auth_token):
-    exchange_number, checkpoints = get_all_checkpoints(tracking_number, auth_token)
+    return info   # ✅ 返回完整 data
 
-    if not checkpoints:
-        print("No tracking data")
-        return
-
-    print(f"\n📦 Tracking: {tracking_number}\n")
-    print(f"\n📦 Exchange Number: {exchange_number}\n")
-    
-    for cp in checkpoints:
-        print(f"🕒 {cp['time_stamp']}")
-        print(f"📍 {cp.get('location', 'N/A')}")
-        print(f"📄 {cp['message']}")
-        print(f"📊 Status: {cp['tracking_status']}")
-        print("-" * 40)

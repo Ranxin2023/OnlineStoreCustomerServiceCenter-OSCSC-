@@ -7,7 +7,6 @@ def save_or_update_user(
     star,
     country,
     remark,
-     
     last_message,
     last_sender
 ):
@@ -16,7 +15,7 @@ def save_or_update_user(
 
     cursor.execute("""
         INSERT INTO users (
-            channel_id, name, star, country, remark, orders, last_message, last_sender
+            channel_id, name, star, country, remark, last_message, last_sender
         )
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(channel_id, name)

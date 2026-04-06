@@ -41,3 +41,4 @@ backend/knowledge_base/hwatel_knowledge_base.jsonl
 testing_code/*.xlsx
 # chroma db
 chroma_db/
+backend/yanwei_apis/A记录test.xlsx

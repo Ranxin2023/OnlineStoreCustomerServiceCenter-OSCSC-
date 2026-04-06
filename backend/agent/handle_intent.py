@@ -1,6 +1,6 @@
 from openai import OpenAI
 from utils._load_json import load_json
-from agent_utils import cosine
+from agent.agent_utils import cosine
 import numpy as np
 import os
 

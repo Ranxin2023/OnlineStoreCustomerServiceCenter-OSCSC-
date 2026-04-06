@@ -1,56 +1,32 @@
 
-from db_management import get_connection, fetch_by_key
-def save_yanwen_order(order: dict):
-    """
-    插入或更新 yanwen_orders
-    order 示例：
-    {
-        "order_id": "123",
-        "tracking_number": "YT123456789",
-        "last_status": "Delivered",
-        "last_status_code": "DELIVERED",
-        "last_update_time": "2026-04-05 10:00:00",
-        "buyer_id": "user123"
-    }
-    """
+from database.db_management import get_connection, fetch_by_key
+import json
 
-    sql = """
-    INSERT INTO yanwen_orders (
-        order_id,
+def save_yanwen_order(tracking_number, data):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO logistics_orders (
         tracking_number,
-        last_status,
-        last_status_code,
-        last_update_time,
-        buyer_id,
-        created_at,
+        carrier,
+        raw_data,
         updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(tracking_number)
+    DO UPDATE SET
+        raw_data = excluded.raw_data,
+        updated_at = CURRENT_TIMESTAMP
+    """, (
+        tracking_number,
+        "yanwen",
+        json.dumps(data)   # 🔥直接存完整 data
+    ))
 
-    ON CONFLICT(tracking_number) DO UPDATE SET
-        last_status = excluded.last_status,
-        last_status_code = excluded.last_status_code,
-        last_update_time = excluded.last_update_time,
-        updated_at = CURRENT_TIMESTAMP;
-    """
-    conn=get_connection()
-    cursor = conn.cursor()
-    values = (
-        order.get("order_id"),
-        order.get("tracking_number"),
-        order.get("last_status"),
-        order.get("last_status_code"),
-        order.get("last_update_time"),
-        order.get("buyer_id"),
-    )
-
-    try:
-        cursor.execute(sql, values)
-        conn.commit()
-        print(f"[DB] Saved tracking: {order.get('tracking_number')}")
-    except Exception as e:
-        print(f"[DB ERROR] {e}")
-        conn.rollback()
+    conn.commit()
+    conn.close()
 
 def fetch_order_from_yanwen(user_name: str):
     return fetch_by_key(

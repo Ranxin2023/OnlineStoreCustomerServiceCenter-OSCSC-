@@ -1,7 +1,10 @@
 import type { Store } from "./constants";
 import { STORE_CHANNEL_ID } from "./constants";
-
-// ————————── 处理driver建立 ──────────────────────────────
+//  ————————── set ali url ──────────────────────────────
+export const setAliAIIMUrl=(channelId: string):string=>{
+  return `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+}
+// ————————── 处理driver建立 ─────────────────────────────
   
  export const handleSetupDriver = async (store: Store) => {
     try {
@@ -198,12 +201,35 @@ import { STORE_CHANNEL_ID } from "./constants";
     }
     
   };
-
+ // ──—————————— 处理订单详情爬取 ──────────────────────────────
+  // const handleScrapeDetail = async () => {
+  //   if (!detailUrl.startsWith("http")) {
+  //     setDetailError("Please enter a valid URL");
+  //     return;
+  //   }
+  //   setDetailLoading(true);
+  //   setDetailError(null);
+  //   setDetailResult(null);
+  //   try {
+  //     const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape-detail`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ url: detailUrl }),
+  //     });
+  //     const json = await response.json();
+  //     if (!response.ok) throw new Error(json.error || "Failed to scrape detail");
+  //     setDetailResult(json);
+  //   } catch (err: any) {
+  //     setDetailError(err.message || "Something went wrong");
+  //   } finally {
+  //     setDetailLoading(false);
+  //   }
+  // };
    // ──———————————————————— Handle Fetching Users ──————————————————————
   export const handleFetchingUsers = async (
     channelId: string, 
     url:string,
-    setUsers: React.Dispatch<React.SetStateAction<any[]>>,
+    // setUsers: React.Dispatch<React.SetStateAction<any[]>>,
     setError: React.Dispatch<React.SetStateAction<string | null>>,
     setLoading: React.Dispatch<React.SetStateAction<boolean>>,
     addLog: (msg: string) => void, 
@@ -231,7 +257,7 @@ import { STORE_CHANNEL_ID } from "./constants";
         throw new Error(data.error || "Failed to fetch users");
       }
 
-      setUsers(data.users);
+      // setUsers(data.users);
 
     } catch (err: any) {
       setError(err.message || "User fetching failed")

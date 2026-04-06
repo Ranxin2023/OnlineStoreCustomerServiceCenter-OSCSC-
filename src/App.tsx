@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef} from "react";
 import "./App.css";
 import { io } from "socket.io-client";
-import { handleSetupDriver, handleScrape, handleExportOrders, handleOpenChat, handleDownloadSA, handleFetchingUsers} from "./handleFunctions.ts"
+import { setAliAIIMUrl, handleSetupDriver, handleScrape, 
+  handleExportOrders, handleOpenChat, handleDownloadSA, handleFetchingUsers} from "./handleFunctions.ts"
 import { STORE_CHANNEL_ID, STORE_URLS } from "./constants.ts";
 
 // setup socket
@@ -13,8 +14,12 @@ function App() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   // const helloMessage="Hello!"
   const [scrapeUrl, setScrapeUrl] = useState("https://csp.aliexpress.com/m_apps/order-manage/orderList?channelId=1579196");
-  const [users, setUsers]=useState<any[]>([])
+  // const [users, setUsers]=useState<any[]>([])
   // ─——————————─ loading定义 ──────────────────────────────────
+  const [fetchYanwenLoading, setFetchUYanwenLoading] = useState<boolean>(false)
+  const [fetchUserLoading1, setFetchUserLoading1] = useState<boolean>(false)
+  const [fetchUserLoading2, setFetchUserLoading2] = useState<boolean>(false)
+  const [fetchUserLoading3, setFetchUserLoading3] = useState<boolean>(false)
   const [scrapeLoading1, setScrapeLoading1] = useState<boolean>(false);
   const [scrapeLoading2, setScrapeLoading2] = useState<boolean>(false);
   const [scrapeLoading3, setScrapeLoading3] = useState<boolean>(false);
@@ -22,10 +27,8 @@ function App() {
   const [openPageLoading1, setOpenPageLoading1] = useState<boolean>(false);
   const [openPageLoading2, setOpenPageLoading2] = useState<boolean>(false);
   const [openPageLoading3, setOpenPageLoading3] = useState<boolean>(false);
-  const [fetchUserLoading1, setFetchUserLoading1] = useState<boolean>(false)
-  const [fetchUserLoading2, setFetchUserLoading2] = useState<boolean>(false)
-  const [fetchUserLoading3, setFetchUserLoading3] = useState<boolean>(false)
   // ─——————————─ error message定义 ──────────────────────────────────
+  const [fetchYanwenError, setFetchYanwenError]=useState<string | null>(null);
   const [scrapyError1, setScrapyError1] = useState<string | null>(null);
   const [scrapyError2, setScrapyError2] = useState<string | null>(null);
   const [scrapyError3, setScrapyError3] = useState<string | null>(null);
@@ -98,41 +101,11 @@ function App() {
     if(!openPageLoading3)
     addLog("Finished scraping Store3...");
   };
-
-  
-
-  // ──—————————— 处理订单详情爬取 ──────────────────────────────
-  // const handleScrapeDetail = async () => {
-  //   if (!detailUrl.startsWith("http")) {
-  //     setDetailError("Please enter a valid URL");
-  //     return;
-  //   }
-  //   setDetailLoading(true);
-  //   setDetailError(null);
-  //   setDetailResult(null);
-  //   try {
-  //     const response = await fetch(`${import.meta.env.LOCALHOST_URL}/api/web-scrapy/scrape-detail`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ url: detailUrl }),
-  //     });
-  //     const json = await response.json();
-  //     if (!response.ok) throw new Error(json.error || "Failed to scrape detail");
-  //     setDetailResult(json);
-  //   } catch (err: any) {
-  //     setDetailError(err.message || "Something went wrong");
-  //   } finally {
-  //     setDetailLoading(false);
-  //   }
-  // };
-
-  
  
   // ──———————————————————— 处理客服一店输入 ──────────────────────────────
   const handleOpenChat1 = async (channelId:string) => {
 
-    const url =
-      `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url =setAliAIIMUrl(channelId)
 
     await handleOpenChat(
       url,
@@ -147,8 +120,8 @@ function App() {
 
   // ──———————————————————— 处理客服二店输入 ──────────────────────────────
   const handleOpenChat2 = async (channelId:string) => {
-    const url =
-      `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url =setAliAIIMUrl(channelId)
+      
 
     await handleOpenChat(
       url,
@@ -162,8 +135,7 @@ function App() {
 
   // ──———————————————————— 处理客服三店输入 ──────────────────────────────
   const handleOpenChat3 = async (channelId: string) => {
-    const url =
-    `https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url =setAliAIIMUrl(channelId)
     
     await handleOpenChat(
       url,
@@ -178,10 +150,10 @@ function App() {
   // ──———————————————————— 处理客服一店用户获取 ──────────────────────────────
   const handleFetchingUsers1=async()=>{
     const channelId=STORE_CHANNEL_ID.store1
-    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url = setAliAIIMUrl(channelId)
     await handleFetchingUsers(
       channelId, url,
-      setUsers,
+      // setUsers,
       setFetchUserError1, 
       setFetchUserLoading1, 
       addLog
@@ -190,9 +162,10 @@ function App() {
   // ──———————————————————— 处理客服二店用户获取 ──────────────────────────────
   const handleFetchingUsers2=async()=>{
     const channelId=STORE_CHANNEL_ID.store2
-    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url = setAliAIIMUrl(channelId)
     await handleFetchingUsers(
-      channelId, url, setUsers,
+      channelId, url, 
+      // setUsers,
       setFetchUserError2,
       setFetchUserLoading2,
       addLog
@@ -201,9 +174,10 @@ function App() {
   // ──———————————————————— 处理客服三店用户获取 ──────────────────────────────
   const handleFetchingUsers3=async()=>{
     const channelId=STORE_CHANNEL_ID.store3
-    const url =`https://csp.aliexpress.com/m_apps/ai-im/im?channelId=${channelId}#/window`
+    const url = setAliAIIMUrl(channelId)
     await handleFetchingUsers(
-      channelId, url, setUsers,
+      channelId, url, 
+      // setUsers,
       setFetchUserError3,
       setFetchUserLoading3,
       addLog
@@ -212,7 +186,7 @@ function App() {
   // ──———————————————————— 处理发消息程序 ──────────────────────────────
   const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
-
+    
     const userMsg = { role: "user", text: chatInput };
 
     setChatMessages(prev => [...prev, userMsg]);
@@ -232,25 +206,55 @@ function App() {
       );
 
       const data = await res.json();
-
+      
       const botMsg = {
         role: "bot",
         text: data.answer
       };
-
+      
       setChatMessages(prev => [...prev, botMsg]);
-
+      
     } catch (err) {
       console.error(err);
-
+      
       setChatMessages(prev => [
         ...prev,
         { role: "bot", text: "Error connecting to server." }
       ]);
     }
-
+    
     setChatInput("");
   };
+  // ──———————————————————— 处理获取燕文信息 ──────────────────────────────
+  const fetchingYanwenOrders = async () => {
+  setFetchUYanwenLoading(true);
+
+  try {
+    const res = await fetch(`${import.meta.env.VITE_LOCALHOST_API_URL}/api/yanwen/fetch-all`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tracking_number: "YOUR_TRACKING_NUMBER", // 👈 这里你可以传订单号
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok){
+      setFetchYanwenError(data.error || "Failed to fetch Yanwen orders");
+      return;
+    }
+
+    console.log("Yanwen result:", data);
+  } catch (err: any) {
+    setFetchYanwenError(err.message||"Network Error")
+    console.error(err.message);
+  } finally {
+    setFetchUYanwenLoading(false);
+  }
+};
   // ──———————————————————— render page ──────────────────────────────
   return (
     <div className="app-layout">
@@ -348,28 +352,28 @@ function App() {
         </div>
 
         {/* ── 订单详情爬取 ── */}
-        <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
          {/*
         <input
-          className="sidebar-input"
-          type="text"
+        className="sidebar-input"
+        type="text"
           placeholder="Order detail URL"
           value={detailUrl}
           onChange={(e) => setDetailUrl(e.target.value)}
           />
         <button
-          className="sidebar-btn"
+        className="sidebar-btn"
           onClick={handleScrapeDetail}
           disabled={detailLoading}
           >
           {detailLoading ? "Loading..." : "📦 Scrape Detail"}
-        </button>
-        {detailError && (
-          <p style={{ color: "salmon", fontSize: "12px" }}>{detailError}</p>
-        )}
-        <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
-          */}
+          </button>
+          {detailError && (
+            <p style={{ color: "salmon", fontSize: "12px" }}>{detailError}</p>
+            )}
+            <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
+            */}
         {/* ──—————— chat page部分 ————————── */}
+        <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
         <h3>Open Chat Page</h3>
          <input
           className="sidebar-input"
@@ -438,7 +442,7 @@ function App() {
             {fetchUserError3 && <p className="error-text">{fetchUserError3}</p>}
           {messageError3 && <p className="error-text">{messageError3}</p>}
         </div>
-        <div className="user-list-panel">
+        {/* <div className="user-list-panel">
           <h3>👥 Users</h3>
 
           {users.length === 0 ? (
@@ -452,6 +456,19 @@ function App() {
               </div>
             ))
           )}
+        </div> */}
+        <hr style={{ width: "100%", borderColor: "#444", margin: "12px 0" }} />
+        <h3>Open Chat Page</h3>
+        <div className="store-grid">
+              <button
+            className="sidebar-btn"
+            onClick={()=>fetchingYanwenOrders()}
+            disabled={openPageLoading3}
+            >
+              {fetchYanwenLoading?"💬Fetching Yanwen": "💬 Fetch Yanwen Orders"}
+            
+          </button>
+          {fetchYanwenError && <p className="error-text">{fetchYanwenError}</p>}
         </div>
       </aside>
       

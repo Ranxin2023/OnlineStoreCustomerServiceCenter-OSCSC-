@@ -353,7 +353,7 @@ def fetch_users():
                 latest_message_text = last.text.strip()
                 latest_sender = "seller" if "self" in last.get_attribute("class") else "buyer"
 
-            save_or_update_user(channel_id=channel_id, name=user_name, star=star, country=country, remark=remark, orders=orders, 
+            save_or_update_user(channel_id=channel_id, name=user_name, star=star, country=country, remark=remark, 
                                 last_message=latest_message_text, last_sender= latest_sender)
             save_user_orders(user_name=user_name, orders=orders,status=order_status,
                              status_code=order_status_code, order_id=order_id, order_time=order_creation_date)
